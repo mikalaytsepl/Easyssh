@@ -142,7 +142,7 @@ fun EasySshApp() {
                 }
 
                 composable(Screen.Servers.route) {
-                    ServersScreen { id -> navController.navigate(Screen.Terminal.createRoute(id)) }
+                    ServersScreen(onNavigateToTerminal = { id -> navController.navigate(Screen.Terminal.createRoute(id)) })
                 }
 
                 composable(Screen.Keys.route) { KeysScreen() }

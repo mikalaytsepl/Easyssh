@@ -37,7 +37,6 @@ android {
     }
 }
 
-// THIS BLOCK MUST BE OUTSIDE THE android {} BLOCK
 kotlin {
     jvmToolchain(11)
 }
@@ -52,15 +51,19 @@ dependencies {
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
+    implementation("androidx.compose.material:material-icons-extended")
 
-    // Navigation for your Bottom Bar [cite: 7]
+    // ViewModel + Compose integration
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
+
+    // Navigation
     implementation("androidx.navigation:navigation-compose:2.8.0")
 
-    // Room Database [cite: 5]
+    // Room Database
     val roomVersion = "2.6.1"
     implementation("androidx.room:room-runtime:$roomVersion")
     implementation("androidx.room:room-ktx:$roomVersion")
-    // If 'ksp' still shows red, we will use the 'add' syntax as a backup
     add("ksp", "androidx.room:room-compiler:$roomVersion")
 
     // Testing
