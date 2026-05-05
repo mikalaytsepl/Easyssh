@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
+    <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0B0F19;
+            overflow: hidden;
+        }
+        #terminal-container {
+            width: 100vw;
+            height: 100vh;
+        }
+        .xterm-viewport {
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="terminal-container"></div>
+    <script>
+        const term = new Terminal({
+            cursorBlink: true,
+            theme: {
+                background: '#0B0F19',
+                foreground: '#CDD6F4',
+                cursor: '#F5E0DC',
+                selectionBackground: '#585B70',
+                black: '#45475A',
+                red: '#F38BA8',
+                green: '#A6E3A1',
+                yellow: '#F9E2AF',
+                blue: '#89B4FA',
+                magenta: '#F5C2E7',
+                cyan: '#94E2D5',
+                white: '#BAC2DE',
+                brightBlack: '#585B70',
+                brightRed: '#F38BA8',
+                brightGreen: '#A6E3A1',
+                brightYellow: '#F9E2AF',
+                brightBlue: '#89B4FA',
+                brightMagenta: '#F5C2E7',
+                brightCyan: '#94E2D5',
+                brightWhite: '#A6ADC8'
+            },
+            fontSize: 13,
+            fontFamily: 'monospace',
+            convertEol: true
+        });
+
+        term.open(document.getElementById('terminal-container'));
+
+        // Handle user input
+        term.onData(data => {
+            if (window.Android) {
+                window.Android.sendData(data);
+            }
+        });
+
+        // Function called from Kotlin
+        function writeToTerminal(data) {
+            term.write(data);
+        }
+
+        // Notify Kotlin that terminal is ready
+        window.onload = function() {
+            if (window.Android) {
+                window.Android.onTerminalReady();
+            }
+        };
+
+        // Handle resizing (basic)
+        window.onresize = function() {
+            // In a real app, you might use a fit addon
+        };
+    </script>
+</body>
+</html>

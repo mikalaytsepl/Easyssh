@@ -66,6 +66,9 @@ dependencies {
     implementation("androidx.room:room-ktx:$roomVersion")
     add("ksp", "androidx.room:room-compiler:$roomVersion")
 
+    // SSH Client
+    implementation("com.github.mwiede:jsch:0.2.16")
+
     // Testing
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.5")
