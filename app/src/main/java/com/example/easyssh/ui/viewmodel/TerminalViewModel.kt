@@ -1,7 +1,6 @@
 package com.example.easyssh.ui.viewmodel
 
 import android.app.Application
-import androidx.compose.ui.graphics.colorspace.connect
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.easyssh.EasySshApplication
@@ -41,8 +40,11 @@ class TerminalViewModel(application: Application) : AndroidViewModel(application
                     }
                 }
 
-                // 2. Setup Session
-                session = jsch.getSession(server.username, server.ip, server.port)
+                // 2. Setup Session - Trim IP and Username to avoid UnknownHostException
+                val username = server.username.trim()
+                val ip = server.ip.trim()
+                
+                session = jsch.getSession(username, ip, server.port)
                 if (!password.isNullOrEmpty()) {
                     session?.setPassword(password)
                 }
@@ -51,7 +53,7 @@ class TerminalViewModel(application: Application) : AndroidViewModel(application
                 config["StrictHostKeyChecking"] = "no"
                 session?.setConfig(config)
 
-                _terminalOutput.emit("Connecting to ${server.ip}...\r\n")
+                _terminalOutput.emit("Connecting to $ip...\r\n")
                 session?.connect(30000)
 
                 // 3. Open Shell Channel

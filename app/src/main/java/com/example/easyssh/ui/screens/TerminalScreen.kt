@@ -1,8 +1,15 @@
 package com.example.easyssh.ui.screens
 
+import android.annotation.SuppressLint
+import android.view.MotionEvent
+import android.webkit.JavascriptInterface
+import android.webkit.WebSettings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,11 +19,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.easyssh.data.Server
 import com.example.easyssh.ui.components.*
@@ -24,6 +34,7 @@ import com.example.easyssh.ui.theme.*
 import com.example.easyssh.ui.viewmodel.ServerViewModel
 import com.example.easyssh.ui.viewmodel.TerminalViewModel
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,22 +46,8 @@ fun TerminalScreen(
     val servers by serverViewModel.servers.collectAsState()
     val server = servers.find { it.id.toString() == serverId }
 
-    var terminalText by remember { mutableStateOf("") }
-    val scrollState = rememberScrollState()
-
     var showPasswordDialog by remember { mutableStateOf(false) }
     var password by remember { mutableStateOf("") }
-
-    LaunchedEffect(terminalViewModel) {
-        terminalViewModel.terminalOutput.collectLatest { text ->
-            terminalText += text
-        }
-    }
-
-    // Auto-scroll to bottom when text updates
-    LaunchedEffect(terminalText) {
-        scrollState.animateScrollTo(scrollState.maxValue)
-    }
 
     if (showPasswordDialog) {
         AlertDialog(
@@ -108,6 +105,8 @@ fun TerminalScreen(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .weight(0.35f)
+                .verticalScroll(rememberScrollState())
                 .padding(bottom = 8.dp)
         ) {
             Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 6.dp)) {
@@ -139,7 +138,6 @@ fun TerminalScreen(
                         )
                     )
                     .clickable {
-                        terminalText = "" // Clear previous output
                         if (server.keyId == null) {
                             showPasswordDialog = true
                         } else {
@@ -169,23 +167,84 @@ fun TerminalScreen(
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .weight(1f)
+                .weight(0.65f)
                 .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
                 .clip(RoundedCornerShape(10.dp))
                 .background(TerminalBg)
-                .border(1.dp, Color(0xFF1A2030), RoundedCornerShape(10.dp))
-                .padding(8.dp)
-                .verticalScroll(scrollState),
+                .border(1.dp, Color(0xFF1A2030), RoundedCornerShape(10.dp)),
         ) {
-            Text(
-                text = terminalText,
-                color = Color.White,
-                fontFamily = FontFamily.Monospace,
-                fontSize = 12.sp,
-                modifier = Modifier.fillMaxSize()
-            )
+            TerminalWebView(terminalViewModel = terminalViewModel)
         }
     }
+}
+
+@SuppressLint("SetJavaScriptEnabled", "ClickableViewAccessibility")
+@Composable
+fun TerminalWebView(terminalViewModel: TerminalViewModel) {
+    val scope = rememberCoroutineScope()
+    var webViewInstance by remember { mutableStateOf<WebView?>(null) }
+    var isTerminalReady by remember { mutableStateOf(false) }
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(isTerminalReady, webViewInstance) {
+        val currentWebView = webViewInstance
+        if (isTerminalReady && currentWebView != null) {
+            terminalViewModel.terminalOutput.collectLatest { text ->
+                currentWebView.evaluateJavascript("writeToTerminal(${quoteJsString(text)})", null)
+            }
+        }
+    }
+
+    AndroidView(
+        modifier = Modifier
+            .fillMaxSize()
+            .focusRequester(focusRequester)
+            .focusable(),
+        factory = { context ->
+            WebView(context).apply {
+                webViewClient = WebViewClient()
+                settings.apply {
+                    javaScriptEnabled = true
+                    allowFileAccess = true
+                    allowContentAccess = true
+                    domStorageEnabled = true
+                }
+                
+                setOnTouchListener { v, event ->
+                    if (event.action == MotionEvent.ACTION_DOWN) {
+                        v.requestFocus()
+                        focusRequester.requestFocus()
+                    }
+                    false
+                }
+
+                addJavascriptInterface(object {
+                    @JavascriptInterface
+                    fun onTerminalReady() {
+                        scope.launch { isTerminalReady = true }
+                    }
+
+                    @JavascriptInterface
+                    fun sendData(data: String) {
+                        terminalViewModel.sendData(data)
+                    }
+                }, "Android")
+                
+                loadUrl("file:///android_asset/terminal.html")
+                webViewInstance = this
+            }
+        },
+        update = {
+            webViewInstance = it
+        }
+    )
+}
+
+private fun quoteJsString(s: String): String {
+    return "'" + s.replace("\\", "\\\\")
+        .replace("'", "\\'")
+        .replace("\n", "\\n")
+        .replace("\r", "\\r") + "'"
 }
 
 @Composable
