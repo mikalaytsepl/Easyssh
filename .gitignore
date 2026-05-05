@@ -1,40 +1,15 @@
-# Built artifacts
-bin/
-gen/
-out/
-build/
-.gradle/
-app/build/
-
-# IDE files
-.idea/
 *.iml
-*.iws
-*.ipr
+.gradle
+/local.properties
+/.idea/caches
+/.idea/libraries
+/.idea/modules.xml
+/.idea/workspace.xml
+/.idea/navEditor.xml
+/.idea/assetWizardSettings.xml
 .DS_Store
-
-# Local configuration
+/build
+/captures
+.externalNativeBuild
+.cxx
 local.properties
-
-# Android Studio / IntelliJ specific
-captures/
-.externalNativeBuild/
-.cxx/
-memory_heap_dumps/
-*.stackdump
-
-# Log files
-*.log
-
-# Gradle
-.gradle/
-build/
-
-# Signing files
-*.jks
-*.keystore
-*.p12
-
-# OS generated
-.DS_Store
-Thumbs.db
