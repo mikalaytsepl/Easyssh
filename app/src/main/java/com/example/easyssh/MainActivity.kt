@@ -45,7 +45,7 @@ fun EasySshApp() {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // Define all 8 screens for the side menu
+    // Removed "Terminal (Lokalny)" from the list
     val allDrawerScreens = listOf(
         "Home (Dashboard)" to Screen.Dashboard.route,
         "Serwery" to Screen.Servers.route,
@@ -53,8 +53,7 @@ fun EasySshApp() {
         "Snippety" to Screen.Snippets.route,
         "Diagnostyka" to Screen.Diagnostics.route,
         "Tunel" to Screen.Tunnel.route,
-        "Akademia" to Screen.Academy.route,
-        "Terminal (Lokalny)" to Screen.Terminal.createRoute("local") // Default placeholder ID
+        "Akademia" to Screen.Academy.route
     )
 
     ModalNavigationDrawer(
@@ -74,7 +73,6 @@ fun EasySshApp() {
                 HorizontalDivider(color = AccentBlue.copy(alpha = 0.2f))
                 Spacer(Modifier.height(8.dp))
 
-                // Iterate over all 8 screens and create a drawer item for each
                 allDrawerScreens.forEach { (label, route) ->
                     val isSelected = currentRoute == route ||
                             (route.startsWith("terminal") && currentRoute?.startsWith("terminal") == true)
@@ -83,7 +81,6 @@ fun EasySshApp() {
                         label = { Text(text = label, fontFamily = FontFamily.Monospace) },
                         selected = isSelected,
                         onClick = {
-                            // Close the drawer and navigate
                             scope.launch { drawerState.close() }
                             navController.navigate(route) {
                                 popUpTo(navController.graph.findStartDestination().id) {

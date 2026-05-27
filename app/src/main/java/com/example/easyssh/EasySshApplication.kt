@@ -10,6 +10,8 @@ class EasySshApplication : Application() {
             this,
             AppDatabase::class.java,
             "easyssh_db"
-        ).build()
+        )
+            .fallbackToDestructiveMigration()
+            .build()
     }
 }
