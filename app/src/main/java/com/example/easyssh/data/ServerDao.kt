@@ -9,16 +9,15 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ServerDao {
-    // display servers in address book
-    @Query("SELECT * FROM servers")
-    // flow parameter will auto update view when data changes
+    @Query("SELECT * FROM servers ORDER BY id DESC")
     fun getAllServers(): Flow<List<Server>>
 
-    // filter by environment
-    @Query("SELECT * FROM servers WHERE environment = :env")
+    @Query("SELECT * FROM servers WHERE environment = :env ORDER BY id DESC")
     fun getServersByEnv(env: String): Flow<List<Server>>
 
-    // CURD part
+    @Query("SELECT * FROM servers WHERE id = :id LIMIT 1")
+    suspend fun getServerById(id: Int): Server?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertServer(server: Server)
 
