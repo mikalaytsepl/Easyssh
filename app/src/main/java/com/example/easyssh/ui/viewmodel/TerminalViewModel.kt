@@ -27,20 +27,20 @@ class TerminalViewModel(application: Application) : AndroidViewModel(application
 
     private val db = (application as EasySshApplication).database
 
-    fun connect(server: Server, password: String? = null) {
+    fun connect(server: Server, password: String? = null, selectedKeyId: Int? = null) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
                 val jsch = JSch()
 
-                // 1. Load private key if assigned
-                server.keyId?.let { keyId ->
+                // 1. Load private key if assigned directly from the connection dialog
+                selectedKeyId?.let { keyId ->
                     val sshKey = db.sshKeyDao().getKeyById(keyId)
                     if (sshKey != null) {
                         jsch.addIdentity(sshKey.name, sshKey.privateKey.toByteArray(), null, null)
                     }
                 }
 
-                // 2. Setup Session - Trim IP and Username to avoid UnknownHostException
+                // 2. Setup Session
                 val username = server.username.trim()
                 val ip = server.ip.trim()
                 

@@ -3,7 +3,6 @@ package com.example.easyssh.ui.screens
 import android.annotation.SuppressLint
 import android.view.MotionEvent
 import android.webkit.JavascriptInterface
-import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.background
@@ -32,6 +31,7 @@ import com.example.easyssh.data.Server
 import com.example.easyssh.ui.components.*
 import com.example.easyssh.ui.theme.*
 import com.example.easyssh.ui.viewmodel.ServerViewModel
+import com.example.easyssh.ui.viewmodel.SshKeyViewModel
 import com.example.easyssh.ui.viewmodel.TerminalViewModel
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -42,49 +42,99 @@ fun TerminalScreen(
     serverId: String,
     serverViewModel: ServerViewModel = viewModel(),
     terminalViewModel: TerminalViewModel = viewModel(),
+    keysViewModel: SshKeyViewModel = viewModel(),
 ) {
     val servers by serverViewModel.servers.collectAsState()
     val server = servers.find { it.id.toString() == serverId }
 
-    var showPasswordDialog by remember { mutableStateOf(false) }
-    var password by remember { mutableStateOf("") }
+    // Pobieramy klucze i filtrujemy tylko te przypisane do tego konkretnego serwera
+    val allKeys by keysViewModel.keys.collectAsState()
+    val serverKeys = allKeys.filter { it.serverId == server?.id }
 
-    if (showPasswordDialog) {
+    var showConnectDialog by remember { mutableStateOf(false) }
+    var selectedAuthMethod by remember { mutableStateOf("PASSWORD") } // "PASSWORD" lub "KEY_id"
+    var passwordInput by remember { mutableStateOf("") }
+
+    if (showConnectDialog) {
         AlertDialog(
-            onDismissRequest = { showPasswordDialog = false },
-            title = { Text("Połączenie SSH", color = AccentBlue, fontFamily = FontFamily.Monospace) },
+            onDismissRequest = { showConnectDialog = false },
+            title = { Text("Uwierzytelnianie SSH", color = AccentBlue, fontFamily = FontFamily.Monospace) },
             text = {
                 Column {
-                    Text("Serwer wymaga hasła do uwierzytelnienia.", color = TextSecondary, fontSize = 14.sp)
+                    Text("Wybierz metodę logowania dla ${server?.name}:", color = TextSecondary, fontSize = 13.sp)
                     Spacer(Modifier.height(16.dp))
-                    TextField(
-                        value = password,
-                        onValueChange = { password = it },
-                        label = { Text("Hasło") },
-                        visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            focusedContainerColor = Surface2,
-                            unfocusedContainerColor = Surface2,
-                            focusedIndicatorColor = AccentGreen
+
+                    // Opcja: HASŁO
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.fillMaxWidth().clickable { selectedAuthMethod = "PASSWORD" }.padding(vertical = 4.dp)
+                    ) {
+                        RadioButton(
+                            selected = selectedAuthMethod == "PASSWORD",
+                            onClick = { selectedAuthMethod = "PASSWORD" },
+                            colors = RadioButtonDefaults.colors(selectedColor = AccentGreen, unselectedColor = TextSecondary)
                         )
-                    )
+                        Text("Hasło", color = TextPrimary)
+                    }
+
+                    if (selectedAuthMethod == "PASSWORD") {
+                        TextField(
+                            value = passwordInput,
+                            onValueChange = { passwordInput = it },
+                            placeholder = { Text("Wpisz hasło", fontSize = 12.sp) },
+                            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth().padding(start = 32.dp),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = BgDeep,
+                                unfocusedContainerColor = BgDeep,
+                                focusedIndicatorColor = AccentGreen
+                            )
+                        )
+                    }
+
+                    // Opcje: KLUCZE (tylko te przypisane do serwera)
+                    if (serverKeys.isNotEmpty()) {
+                        Spacer(Modifier.height(8.dp))
+                        com.example.easyssh.ui.components.Divider() // <-- Tu była poprawka (usunięto parametr color)
+                        Spacer(Modifier.height(8.dp))
+
+                        serverKeys.forEach { key ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.fillMaxWidth().clickable { selectedAuthMethod = "KEY_${key.id}" }.padding(vertical = 4.dp)
+                            ) {
+                                RadioButton(
+                                    selected = selectedAuthMethod == "KEY_${key.id}",
+                                    onClick = { selectedAuthMethod = "KEY_${key.id}" },
+                                    colors = RadioButtonDefaults.colors(selectedColor = AccentGreen, unselectedColor = TextSecondary)
+                                )
+                                Text("🔑 ${key.name}", color = AccentBlue, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+                            }
+                        }
+                    } else {
+                        Spacer(Modifier.height(8.dp))
+                        Text("Brak przypisanych kluczy SSH.", color = TextTertiary, fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(start = 12.dp))
+                    }
                 }
             },
             confirmButton = {
                 TextButton(onClick = {
-                    showPasswordDialog = false
-                    server?.let { terminalViewModel.connect(it, password) }
+                    showConnectDialog = false
+                    if (selectedAuthMethod == "PASSWORD") {
+                        server?.let { terminalViewModel.connect(it, password = passwordInput) }
+                    } else {
+                        val keyId = selectedAuthMethod.removePrefix("KEY_").toIntOrNull()
+                        server?.let { terminalViewModel.connect(it, selectedKeyId = keyId) }
+                    }
                 }) {
                     Text("POŁĄCZ", color = AccentGreen, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showPasswordDialog = false }) {
-                    Text("ANULUJ", color = TextTertiary)
-                }
+                TextButton(onClick = { showConnectDialog = false }) { Text("ANULUJ", color = TextTertiary) }
             },
-            containerColor = BgDeep,
+            containerColor = SurfaceLight,
             shape = RoundedCornerShape(16.dp)
         )
     }
@@ -122,9 +172,9 @@ fun TerminalScreen(
             SshCard(modifier = Modifier.padding(horizontal = 16.dp)) {
                 ServerDetailsGrid(server = server)
             }
-            
+
             Spacer(Modifier.height(12.dp))
-            
+
             // Connect Button
             Box(
                 contentAlignment = Alignment.Center,
@@ -138,11 +188,7 @@ fun TerminalScreen(
                         )
                     )
                     .clickable {
-                        if (server.keyId == null) {
-                            showPasswordDialog = true
-                        } else {
-                            terminalViewModel.connect(server)
-                        }
+                        showConnectDialog = true
                     }
                     .padding(vertical = 13.dp),
             ) {
@@ -163,7 +209,7 @@ fun TerminalScreen(
             style = MaterialTheme.typography.labelSmall,
             color = TextTertiary
         )
-        
+
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -209,7 +255,7 @@ fun TerminalWebView(terminalViewModel: TerminalViewModel) {
                     allowContentAccess = true
                     domStorageEnabled = true
                 }
-                
+
                 setOnTouchListener { v, event ->
                     if (event.action == MotionEvent.ACTION_DOWN) {
                         v.requestFocus()
@@ -229,7 +275,7 @@ fun TerminalWebView(terminalViewModel: TerminalViewModel) {
                         terminalViewModel.sendData(data)
                     }
                 }, "Android")
-                
+
                 loadUrl("file:///android_asset/terminal.html")
                 webViewInstance = this
             }
