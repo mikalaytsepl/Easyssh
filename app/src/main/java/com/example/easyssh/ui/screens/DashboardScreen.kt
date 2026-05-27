@@ -22,6 +22,8 @@ import com.example.easyssh.data.Server
 import com.example.easyssh.ui.components.*
 import com.example.easyssh.ui.theme.*
 import com.example.easyssh.ui.viewmodel.ServerViewModel
+import com.example.easyssh.ui.viewmodel.SshKeyViewModel
+import com.example.easyssh.ui.viewmodel.SnippetViewModel
 
 @Composable
 fun DashboardScreen(
@@ -29,10 +31,15 @@ fun DashboardScreen(
     onNavigateToDiagnostics: () -> Unit,
     onNavigateToTunnel:      () -> Unit,
     onNavigateToAcademy:     () -> Unit,
-    viewModel: ServerViewModel = viewModel(),
+    serverViewModel: ServerViewModel = viewModel(),
+    keysViewModel: SshKeyViewModel = viewModel(),
+    snippetsViewModel: SnippetViewModel = viewModel(),
 ) {
-    val servers by viewModel.servers.collectAsState()
+    val servers by serverViewModel.servers.collectAsState()
     val recentServers = servers.take(5)
+
+    val keys by keysViewModel.keys.collectAsState()
+    val snippets by snippetsViewModel.snippets.collectAsState()
 
     Column(
         modifier = Modifier
@@ -79,18 +86,18 @@ fun DashboardScreen(
                     )
                     StatCard(
                         modifier = Modifier.weight(1f),
-                        number   = "0",
+                        number   = keys.size.toString(),
                         label    = "Klucze SSH",
                         color    = AccentBlue,
-                        fraction = 0f,
+                        fraction = (keys.size / 20f).coerceIn(0f, 1f),
                         barColor = AccentBlue,
                     )
                     StatCard(
                         modifier = Modifier.weight(1f),
-                        number   = "0",
+                        number   = snippets.size.toString(),
                         label    = "Snippety",
                         color    = AccentYellow,
-                        fraction = 0f,
+                        fraction = (snippets.size / 20f).coerceIn(0f, 1f),
                         barColor = AccentYellow,
                     )
                 }
