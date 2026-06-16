@@ -33,12 +33,7 @@ class EasySshApplication : Application() {
         seedIfEmpty()
     }
 
-    /**
-     * Wypełnia bazę danymi przykładowymi, jeśli jest pusta. Robione na poziomie aplikacji
-     * (a nie w RoomDatabase.Callback.onCreate), bo onCreate NIE jest wywoływany po
-     * fallbackToDestructiveMigration — a seed ma się pojawić także po bumpie wersji bazy.
-     * Kontrola count() == 0 sprawia, że seed wykona się tylko raz (i nie nadpisze danych usera).
-     */
+
     private fun seedIfEmpty() {
         appScope.launch {
             val serverDao = database.serverDao()

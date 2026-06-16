@@ -25,10 +25,6 @@ class SshKeyViewModel(app: Application) : AndroidViewModel(app) {
             initialValue = emptyList()
         )
 
-    /**
-     * Dodaje klucz. Jeśli klucz wskazuje serwer (serverId != null), ustawia go także jako domyślny
-     * klucz tego serwera (Server.keyId) — relacja dwukierunkowa zgodnie z modelem bazy.
-     */
     fun addKey(key: SshKey) {
         viewModelScope.launch {
             // Szyfrowanie klucza prywatnego w spoczynku (Android Keystore); klucz publiczny jawnie
@@ -45,10 +41,7 @@ class SshKeyViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /**
-     * Przypisuje/odpina istniejący klucz do serwera, utrzymując dwukierunkowość (pkt 4).
-     * newServerId == null → klucz staje się ogólny (nieprzypisany).
-     */
+
     fun assignKeyToServer(key: SshKey, newServerId: Int?) {
         viewModelScope.launch {
             keyDao.setKeyServer(key.id, newServerId)        // strona klucz → serwer

@@ -13,12 +13,9 @@ import java.io.StringWriter
 import java.security.SecureRandom
 
 /**
- * Generowanie kluczy Ed25519 przez Bouncy Castle (czysta implementacja w Javie), z pominięciem
- * JCE/EdDSA Androida — które na części urządzeń jest niekompletne i rzuca
- * UnsupportedOperationException przy generowaniu/eksporcie klucza.
- *
- * Zwraca parę: (klucz prywatny w formacie OpenSSH PEM, klucz publiczny w formacie authorized_keys).
- * Ochrona passphrase nakładana jest wyżej (warstwa [com.example.easyssh.security.KeyVault]).
+ * Generowanie kluczy Ed25519 przez Bouncy Castle, z pominięciem
+ JCE/EdDSA Androida — które na części urządzeń jest niekompletne i rzuca
+ UnsupportedOperationException przy generowaniu/eksporcie klucza.
  */
 object Ed25519KeyGen {
 
@@ -30,11 +27,11 @@ object Ed25519KeyGen {
         val priv = pair.private as Ed25519PrivateKeyParameters
         val pub = pair.public as Ed25519PublicKeyParameters
 
-        // Klucz publiczny → "ssh-ed25519 <base64> comment"
+        // Klucz publiczny
         val pubBlob = OpenSSHPublicKeyUtil.encodePublicKey(pub)
         val publicLine = "ssh-ed25519 " + Base64.encodeToString(pubBlob, Base64.NO_WRAP) + " " + comment
 
-        // Klucz prywatny → OpenSSH PEM (-----BEGIN OPENSSH PRIVATE KEY-----)
+        // Klucz prywatny
         val privBlob = OpenSSHPrivateKeyUtil.encodePrivateKey(priv)
         val writer = StringWriter()
         PemWriter(writer).use { it.writeObject(PemObject("OPENSSH PRIVATE KEY", privBlob)) }

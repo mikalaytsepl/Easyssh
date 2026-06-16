@@ -10,11 +10,10 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 /**
- * Szyfrowanie wrażliwych danych w spoczynku (klucze prywatne SSH) kluczem AES-256-GCM
+ * Szyfrowanie wrażliwych danych w spoczynku (np klucze prywatne SSH) z użyciem AES-256
  * przechowywanym sprzętowo w Android Keystore — materiał klucza nigdy nie opuszcza Keystore.
  *
  * Format zapisu: "enc:v1:" + Base64(IV || ciphertext+tag). Prefiks pozwala odróżnić dane
- * zaszyfrowane od ewentualnych starszych (jawnych) — [decrypt] zwraca takie po prostu bez zmian.
  */
 object CryptoManager {
 
@@ -43,7 +42,7 @@ object CryptoManager {
         return generator.generateKey()
     }
 
-    /** Szyfruje tekst; przy braku Keystore zwraca tekst jawny (lepsze niż crash). */
+    // zyfruje tekst; przy braku Keystore zwraca tekst jawny (lepsze niż crash).
     fun encrypt(plain: String): String = runCatching {
         val cipher = Cipher.getInstance(TRANSFORMATION)
         cipher.init(Cipher.ENCRYPT_MODE, secretKey())
@@ -52,7 +51,7 @@ object CryptoManager {
         PREFIX + Base64.encodeToString(iv + cipherText, Base64.NO_WRAP)
     }.getOrElse { plain }
 
-    /** Odszyfrowuje; dane bez prefiksu (jawne/starsze) zwraca bez zmian. */
+    // Odszyfrowuje dane bez prefiksu (jawne/starsze) zwraca bez zmian.
     fun decrypt(stored: String): String {
         if (!stored.startsWith(PREFIX)) return stored
         return runCatching {

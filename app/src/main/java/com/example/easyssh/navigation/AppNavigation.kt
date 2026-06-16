@@ -7,16 +7,15 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.ui.graphics.vector.ImageVector
 
-// ── Screen routes ────────────────────────────────────────────
-
+// screen routes
 sealed class Screen(val route: String) {
-    // Bottom-nav destinations
+    // destinations for bottom panel
     object Dashboard : Screen("dashboard")
     object Servers   : Screen("servers")
     object Keys      : Screen("keys")
     object Snippets  : Screen("snippets")
 
-    // Detail / tool screens (no bottom nav)
+    // destinations for app side panel
     object Terminal    : Screen("terminal/{serverId}") {
         fun createRoute(serverId: String) = "terminal/$serverId"
     }
@@ -25,7 +24,7 @@ sealed class Screen(val route: String) {
     object Academy     : Screen("academy")
 }
 
-// ── Bottom navigation items ──────────────────────────────────
+// bottom navigation panel items
 
 data class BottomNavItem(
     val screen: Screen,
@@ -40,6 +39,6 @@ val bottomNavItems = listOf(
     BottomNavItem(Screen.Snippets,  "Snippety", Icons.Outlined.Info),
 )
 
-// ── Which routes show the bottom nav ────────────────────────
+// which routes show the bottom nav
 
 val bottomNavRoutes = bottomNavItems.map { it.screen.route }.toSet()

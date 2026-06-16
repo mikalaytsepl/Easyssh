@@ -8,14 +8,6 @@ import javax.crypto.spec.GCMParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
-/**
- * Ochrona klucza prywatnego hasłem (passphrase) wybranym przez użytkownika.
- * PBKDF2 → AES-256-GCM. Format zapisu: "pbe:v1:" + Base64(salt(16) || iv(12) || ciphertext+tag).
- *
- * Niezależne od Android Keystore (sekretem jest passphrase użytkownika) oraz od formatu OpenSSH,
- * dzięki czemu działa jednolicie dla RSA/ECDSA/Ed25519. Klucz jest odszyfrowywany dopiero przy
- * łączeniu, po podaniu passphrase. Na wierzchu i tak nakłada się szyfrowanie at-rest [CryptoManager].
- */
 object KeyVault {
     private const val PREFIX = "pbe:v1:"
     private const val ITERATIONS = 120_000
@@ -36,7 +28,7 @@ object KeyVault {
         return PREFIX + Base64.encodeToString(salt + iv + ct, Base64.NO_WRAP)
     }
 
-    /** Odszyfrowuje; przy błędnym haśle rzuca wyjątek (niezgodny tag GCM). */
+    // Odszyfrowuje; przy błędnym haśle rzuca wyjątek (niezgodny tag GCM).
     fun decrypt(stored: String, passphrase: String): String {
         val data = Base64.decode(stored.removePrefix(PREFIX), Base64.NO_WRAP)
         val salt = data.copyOfRange(0, SALT_LEN)
@@ -48,7 +40,7 @@ object KeyVault {
     }
 
     private fun deriveKey(passphrase: String, salt: ByteArray): SecretKeySpec {
-        // SHA-256 od API 26; na starszych (min 24) fallback do SHA-1. Klucz tworzony i używany
+        // SHA-256 od API 26; na starszych fallback do SHA-1. Klucz tworzony i używany
         // na tym samym urządzeniu, więc dobór algorytmu jest spójny.
         val factory = runCatching { SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256") }
             .getOrElse { SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1") }

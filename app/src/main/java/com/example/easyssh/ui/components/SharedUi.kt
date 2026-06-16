@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.example.easyssh.R
 import com.example.easyssh.ui.theme.*
 
-// ── Environment tag ──────────────────────────────────────────
+// env tag
 
 enum class EnvTag(val label: String, val bg: Color, val fg: Color, val border: Color) {
     PROD(
@@ -76,11 +76,7 @@ fun EnvBadge(tag: EnvTag, modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * Ikona dystrybucji serwera. Szuka zasobu `distro_<nazwa>` (np. distro_ubuntu) dorzucanego
- * później jako PNG; gdy go nie ma, używa generycznej ikony [R.drawable.distro_linux].
- * Dzięki temu aplikacja działa zanim wgramy logotypy, a po ich dodaniu zaświecą się automatycznie.
- */
+
 @Composable
 fun DistroIcon(distro: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
@@ -96,8 +92,6 @@ fun DistroIcon(distro: String, modifier: Modifier = Modifier) {
         modifier           = modifier,
     )
 }
-
-// ── Monospace label ──────────────────────────────────────────
 
 @Composable
 fun MonoLabel(
@@ -115,7 +109,6 @@ fun MonoLabel(
     )
 }
 
-// ── Section header ───────────────────────────────────────────
 
 @Composable
 fun SectionLabel(text: String, modifier: Modifier = Modifier) {
@@ -129,7 +122,6 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier) {
     )
 }
 
-// ── Surface card ─────────────────────────────────────────────
 
 @Composable
 fun SshCard(
@@ -147,7 +139,6 @@ fun SshCard(
     )
 }
 
-// ── Primary button ───────────────────────────────────────────
 
 @Composable
 fun PrimaryButton(
@@ -178,7 +169,6 @@ fun PrimaryButton(
     }
 }
 
-// ── Secondary button ─────────────────────────────────────────
 
 @Composable
 fun SecondaryButton(
@@ -203,7 +193,6 @@ fun SecondaryButton(
     }
 }
 
-// ── Search bar (dekoracyjny) ──────────────────────────────────
 
 @Composable
 fun FakeSearchBar(hint: String, modifier: Modifier = Modifier) {
@@ -222,7 +211,6 @@ fun FakeSearchBar(hint: String, modifier: Modifier = Modifier) {
     }
 }
 
-// ── Progress bar ─────────────────────────────────────────────
 
 @Composable
 fun ThinProgressBar(
@@ -247,7 +235,6 @@ fun ThinProgressBar(
     }
 }
 
-// ── Separator ─────────────────────────────────────────────────
 
 @Composable
 fun Divider(modifier: Modifier = Modifier) {
@@ -259,7 +246,6 @@ fun Divider(modifier: Modifier = Modifier) {
     )
 }
 
-// ── Fake input field (dekoracyjny) ────────────────────────────
 
 @Composable
 fun FakeInputField(label: String, placeholder: String, modifier: Modifier = Modifier) {
@@ -279,7 +265,6 @@ fun FakeInputField(label: String, placeholder: String, modifier: Modifier = Modi
     }
 }
 
-// ── Key type badge ────────────────────────────────────────────
 
 @Composable
 fun KeyTypeBadge(label: String, color: Color = AccentBlue, modifier: Modifier = Modifier) {
@@ -299,7 +284,6 @@ fun KeyTypeBadge(label: String, color: Color = AccentBlue, modifier: Modifier = 
     }
 }
 
-// ── Snippet command row ───────────────────────────────────────
 
 @Composable
 fun SnippetCommandRow(command: String, modifier: Modifier = Modifier) {

@@ -181,7 +181,6 @@ fun ServersScreen(
     }
 }
 
-// ── Server card ──────────────────────────────────────────────
 
 @Composable
 private fun ServerListCard(
@@ -264,7 +263,6 @@ private fun ServerListCard(
     }
 }
 
-// ── Filter chip ──────────────────────────────────────────────
 
 @Composable
 private fun SrvFilterChip(label: String, tag: EnvTag, selected: Boolean, onClick: () -> Unit) {

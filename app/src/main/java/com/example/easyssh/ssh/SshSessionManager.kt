@@ -30,7 +30,7 @@ sealed class ConnectionState {
 
 /**
  * Pojedyncza sesja SSH powiązana z serwerem. Żyje niezależnie od ekranów —
- * własny scope korutyn pozwala sesji przetrwać nawigację między ekranami.
+ * własny scope który nie pozwala sesji przetrwać nawigację między ekranami.
  */
 class SshSession(
     val serverId: Int,

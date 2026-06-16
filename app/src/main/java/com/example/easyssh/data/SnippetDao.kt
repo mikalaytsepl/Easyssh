@@ -3,6 +3,7 @@ package com.example.easyssh.data
 import androidx.room.*
 import kotlinx.coroutines.flow.Flow
 
+// dao for working with snippets database
 @Dao
 interface SnippetDao {
     @Query("SELECT * FROM snippets")

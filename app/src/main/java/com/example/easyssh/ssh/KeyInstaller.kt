@@ -8,11 +8,8 @@ import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
 import java.util.Properties
 
-/**
- * Instalacja klucza publicznego na serwerze (odpowiednik `ssh-copy-id`):
- * łączy się przez SSH na hasło i dopisuje klucz do `~/.ssh/authorized_keys`,
- * ustawiając poprawne uprawnienia. Po wgraniu można logować się kluczem zamiast hasłem.
- */
+// Instalacja klucza publicznego na serwerze (odpowiednik `ssh-copy-id`):
+
 object KeyInstaller {
 
     suspend fun installPublicKey(server: Server, publicKey: String, password: String): Result<Unit> =

@@ -36,7 +36,7 @@ fun DashboardScreen(
     snippetsViewModel: SnippetViewModel = viewModel(),
 ) {
     val servers by serverViewModel.servers.collectAsState()
-    // "Ostatnio używane" — sortowanie po znaczniku ostatniego połączenia
+    // odstatnio używane są sortowane po czasie "it"
     val recentServers = servers.sortedByDescending { it.lastConnectedAt }.take(5)
 
     val keys by keysViewModel.keys.collectAsState()
@@ -47,7 +47,7 @@ fun DashboardScreen(
             .fillMaxSize()
             .background(BgDeep)
     ) {
-        // ── Header ──────────────────────────────────────────────
+        // header
         Column(modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 6.dp)) {
             Text(
                 text       = "// WELCOME_BACK",
@@ -69,7 +69,6 @@ fun DashboardScreen(
             verticalArrangement = Arrangement.spacedBy(0.dp),
         ) {
 
-            // ── Stat cards ────────────────────────────────────
             item {
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -104,7 +103,6 @@ fun DashboardScreen(
                 }
             }
 
-            // ── Recent servers ────────────────────────────────
             item {
                 SectionLabel(text = "Ostatnio używane")
             }
@@ -129,7 +127,6 @@ fun DashboardScreen(
                 }
             }
 
-            // ── Quick tools ──────────────────────────────────
             item {
                 SectionLabel(text = "Narzędzia")
             }
@@ -164,7 +161,7 @@ fun DashboardScreen(
                 }
             }
 
-            // ── System status ─────────────────────────────────
+            // system status
             item {
                 SectionLabel(text = "System")
             }

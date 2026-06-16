@@ -42,9 +42,6 @@ import java.io.InputStreamReader
 import java.net.InetSocketAddress
 import java.net.Socket
 
-// --- VIEWMODEL Z PRAWDZIWĄ LOGIKĄ SIECIOWĄ ---
-
-// --- ZAKTUALIZOWANY VIEWMODEL ---
 
 enum class DiagTool { PING, PORT_SCAN }
 
@@ -93,7 +90,7 @@ class DiagnosticsViewModel : ViewModel() {
                 }
                 process.waitFor()
 
-                // 2. SMART PING: Fallback na TCP, jeśli ICMP zostało zablokowane (częste w emulatorach i bez roota)
+                // fallback na TCP, jeśli ICMP zostało zablokowane (częste w emulatorach i bez roota)
                 if (packetLoss100 || permissionDenied || process.exitValue() != 0) {
                     withContext(Dispatchers.Main) {
                         pingOutput = pingOutput + ""
@@ -168,8 +165,6 @@ class DiagnosticsViewModel : ViewModel() {
     }
 }
 
-
-// --- INTERFEJS UŻYTKOWNIKA (COMPOSE) ---
 
 @Composable
 fun DiagnosticsScreen(viewModel: DiagnosticsViewModel = viewModel()) {
@@ -332,8 +327,6 @@ fun DiagnosticsScreen(viewModel: DiagnosticsViewModel = viewModel()) {
         }
     }
 }
-
-// --- SUB-KOMPONENTY ---
 
 @Composable
 fun ToolSelector(icon: String, label: String, isSelected: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {

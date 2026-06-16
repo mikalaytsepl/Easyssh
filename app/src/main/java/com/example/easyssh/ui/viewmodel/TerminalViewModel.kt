@@ -11,10 +11,6 @@ import com.example.easyssh.ssh.SshSessionManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-/**
- * Cienka warstwa nad SshSessionManager — sesje żyją na poziomie aplikacji,
- * więc przeżywają nawigację między ekranami (powrót do serwera = ta sama sesja).
- */
 class TerminalViewModel(application: Application) : AndroidViewModel(application) {
 
     private val db = (application as EasySshApplication).database

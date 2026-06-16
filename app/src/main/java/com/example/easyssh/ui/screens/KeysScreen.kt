@@ -196,7 +196,6 @@ fun KeysScreen(
                         try {
                             val (rawPriv, realPub) = withContext(Dispatchers.IO) {
                                 if (type == "Ed25519") {
-                                    // Ed25519 generujemy przez Bouncy Castle (omija niedostępne JCE/EdDSA Androida)
                                     Ed25519KeyGen.generate("easyssh-$name")
                                 } else {
                                     val jsch = JSch()
@@ -217,8 +216,6 @@ fun KeysScreen(
                                 }
                             }
 
-                            // Passphrase: jednolita ochrona klucza prywatnego (PBKDF2 + AES-GCM),
-                            // odszyfrowywana przy łączeniu. Działa tak samo dla każdego algorytmu.
                             val realPriv = if (passphrase.isNotBlank()) KeyVault.encrypt(rawPriv, passphrase) else rawPriv
 
                             viewModel.addKey(

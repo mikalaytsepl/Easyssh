@@ -126,7 +126,6 @@ fun TerminalScreen(
                         )
                     }
 
-                    // Opcje: KLUCZE (tylko te przypisane do serwera)
                     if (serverKeys.isNotEmpty()) {
                         Spacer(Modifier.height(8.dp))
                         com.example.easyssh.ui.components.Divider()
@@ -153,7 +152,6 @@ fun TerminalScreen(
                         Text("Brak dostępnych kluczy SSH.", color = TextTertiary, fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(start = 12.dp))
                     }
 
-                    // Passphrase klucza (opcjonalnie) — pokazywane przy wyborze klucza
                     if (selectedAuthMethod.startsWith("KEY_")) {
                         Spacer(Modifier.height(8.dp))
                         TextField(
@@ -308,7 +306,6 @@ fun TerminalScreen(
             }
         }
 
-        // ── Quick commands ─────────────────────────────────────
         Row(
             horizontalArrangement = Arrangement.spacedBy(6.dp),
             modifier = Modifier
@@ -331,7 +328,6 @@ fun TerminalScreen(
             )
         }
 
-        // ── Terminal window ────────────────────────────────────
         Text(
             text = "TERMINAL",
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),

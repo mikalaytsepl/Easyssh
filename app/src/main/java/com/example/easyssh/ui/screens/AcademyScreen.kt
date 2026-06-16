@@ -39,7 +39,6 @@ import com.example.easyssh.R
 import com.example.easyssh.ui.components.*
 import com.example.easyssh.ui.theme.*
 
-// ── Model treści poradników ───────────────────────────────────
 
 private sealed class Block {
     class P(val text: String) : Block()
@@ -100,7 +99,7 @@ private val guides = listOf(
     ),
 )
 
-// ── Ekran ─────────────────────────────────────────────────────
+// ── Ekran
 
 @Composable
 fun AcademyScreen() {
@@ -147,7 +146,7 @@ fun AcademyScreen() {
     }
 }
 
-// ── Karta wideo (featured) ────────────────────────────────────
+// wideo
 
 @Composable
 private fun FeaturedVideoCard() {
@@ -232,8 +231,7 @@ private fun FeaturedVideoCard() {
     }
 }
 
-// ── Pełnoekranowy odtwarzacz wideo ────────────────────────────
-
+// pełnoekranowy odtwarzacz
 @Composable
 private fun FullscreenVideoDialog(videoResId: Int, onDismiss: () -> Unit) {
     Dialog(
@@ -260,7 +258,7 @@ private fun FullscreenVideoDialog(videoResId: Int, onDismiss: () -> Unit) {
                     .fillMaxWidth()
                     .aspectRatio(16f / 9f),
             )
-            // Przycisk zamknięcia
+            // closing button
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier
