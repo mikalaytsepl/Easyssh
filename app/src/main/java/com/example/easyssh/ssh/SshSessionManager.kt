@@ -5,6 +5,7 @@ import com.example.easyssh.data.SshKey
 import com.example.easyssh.security.KeyVault
 import com.jcraft.jsch.ChannelShell
 import com.jcraft.jsch.JSch
+import com.jcraft.jsch.KeyPair
 import com.jcraft.jsch.Session
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -75,8 +76,16 @@ class SshSession(
                         }
                         jsch.addIdentity(key.name, plain.toByteArray(), null, null)
                     } else {
-                        // Klucz jawny lub zaszyfrowany standardowo (import) — passphrase przekazujemy do JSch
+                        // Klucz jawny lub zaszyfrowany standardowo (import). Jeśli jest zaszyfrowany,
+                        // walidujemy passphrase od razu (zamiast czekać na "USERAUTH fail" z serwera).
                         val pass = passphrase?.takeIf { it.isNotEmpty() }?.toByteArray()
+                        val probe = KeyPair.load(jsch, rawPem.toByteArray(), null)
+                        val needsPass = probe.isEncrypted
+                        val unlocked = if (needsPass) (pass != null && probe.decrypt(pass)) else true
+                        probe.dispose()
+                        if (needsPass && !unlocked) {
+                            throw RuntimeException("Błędne hasło klucza (passphrase)")
+                        }
                         jsch.addIdentity(key.name, rawPem.toByteArray(), null, pass)
                     }
                 }

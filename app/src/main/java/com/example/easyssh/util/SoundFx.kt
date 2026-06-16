@@ -26,11 +26,11 @@ object SoundFx {
         }
     }
 
-    /** Cichy ton potwierdzenia — skopiowano do schowka. */
+    /** Krótki, słyszalny ton potwierdzenia — skopiowano do schowka. */
     fun playCopy() {
         runCatching {
-            val tg = copyTone ?: ToneGenerator(AudioManager.STREAM_MUSIC, 35).also { copyTone = it }
-            tg.startTone(ToneGenerator.TONE_PROP_ACK, 120)
+            val tg = copyTone ?: ToneGenerator(AudioManager.STREAM_MUSIC, 80).also { copyTone = it }
+            tg.startTone(ToneGenerator.TONE_PROP_BEEP, 160)
         }
     }
 }
