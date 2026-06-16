@@ -35,8 +35,23 @@ android {
     buildFeatures {
         compose = true
     }
-}
 
+    packaging {
+        resources {
+            // Użycie ** sprawia, że reguła zadziała dla wersji 9, 11, 15, 21 i każdej innej
+            pickFirsts.add("META-INF/versions/**/OSGI-INF/MANIFEST.MF")
+
+            // Dla pewności (niektóre wersje Gradle preferują dokładną ścieżkę dla 15)
+            pickFirsts.add("META-INF/versions/15/OSGI-INF/MANIFEST.MF")
+
+            excludes.add("META-INF/DEPENDENCIES")
+            excludes.add("META-INF/LICENSE")
+            excludes.add("META-INF/LICENSE.txt")
+            excludes.add("META-INF/NOTICE")
+            excludes.add("META-INF/NOTICE.txt")
+        }
+    }
+}
 kotlin {
     jvmToolchain(11)
 }
@@ -67,7 +82,10 @@ dependencies {
     add("ksp", "androidx.room:room-compiler:$roomVersion")
 
     // SSH Client
-    implementation("com.github.mwiede:jsch:0.2.16")
+    implementation("com.github.mwiede:jsch:0.2.17")
+    implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
+    // Ed25519 dla JSch na Androidzie (JCE/EdDSA Androida bywa niekompletne)
+    implementation("net.i2p.crypto:eddsa:0.3.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

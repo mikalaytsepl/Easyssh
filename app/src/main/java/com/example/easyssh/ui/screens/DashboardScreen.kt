@@ -22,6 +22,8 @@ import com.example.easyssh.data.Server
 import com.example.easyssh.ui.components.*
 import com.example.easyssh.ui.theme.*
 import com.example.easyssh.ui.viewmodel.ServerViewModel
+import com.example.easyssh.ui.viewmodel.SshKeyViewModel
+import com.example.easyssh.ui.viewmodel.SnippetViewModel
 
 @Composable
 fun DashboardScreen(
@@ -29,10 +31,16 @@ fun DashboardScreen(
     onNavigateToDiagnostics: () -> Unit,
     onNavigateToTunnel:      () -> Unit,
     onNavigateToAcademy:     () -> Unit,
-    viewModel: ServerViewModel = viewModel(),
+    serverViewModel: ServerViewModel = viewModel(),
+    keysViewModel: SshKeyViewModel = viewModel(),
+    snippetsViewModel: SnippetViewModel = viewModel(),
 ) {
-    val servers by viewModel.servers.collectAsState()
-    val recentServers = servers.take(5)
+    val servers by serverViewModel.servers.collectAsState()
+    // "Ostatnio używane" — sortowanie po znaczniku ostatniego połączenia
+    val recentServers = servers.sortedByDescending { it.lastConnectedAt }.take(5)
+
+    val keys by keysViewModel.keys.collectAsState()
+    val snippets by snippetsViewModel.snippets.collectAsState()
 
     Column(
         modifier = Modifier
@@ -79,18 +87,18 @@ fun DashboardScreen(
                     )
                     StatCard(
                         modifier = Modifier.weight(1f),
-                        number   = "0",
+                        number   = keys.size.toString(),
                         label    = "Klucze SSH",
                         color    = AccentBlue,
-                        fraction = 0f,
+                        fraction = (keys.size / 20f).coerceIn(0f, 1f),
                         barColor = AccentBlue,
                     )
                     StatCard(
                         modifier = Modifier.weight(1f),
-                        number   = "0",
+                        number   = snippets.size.toString(),
                         label    = "Snippety",
                         color    = AccentYellow,
-                        fraction = 0f,
+                        fraction = (snippets.size / 20f).coerceIn(0f, 1f),
                         barColor = AccentYellow,
                     )
                 }
@@ -223,7 +231,7 @@ private fun RecentServerCard(server: Server, onClick: () -> Unit) {
                 .clip(RoundedCornerShape(8.dp))
                 .background(envTag.bg),
         ) {
-            Text(text = envEmojiFor(server.environment), fontSize = 18.sp)
+            DistroIcon(server.distro, Modifier.size(22.dp))
         }
         Spacer(Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
@@ -297,11 +305,4 @@ fun envTagFor(env: String): EnvTag = when (env.uppercase()) {
     "QA"                              -> EnvTag.QA
     "DEV", "DEVELOPMENT"              -> EnvTag.DEV
     else                              -> EnvTag.OK
-}
-
-fun envEmojiFor(env: String): String = when (env.uppercase()) {
-    "PROD", "PRODUKCJA", "PRODUCTION" -> "🐧"
-    "QA"                              -> "🟡"
-    "DEV", "DEVELOPMENT"              -> "🟦"
-    else                              -> "🖥️"
 }

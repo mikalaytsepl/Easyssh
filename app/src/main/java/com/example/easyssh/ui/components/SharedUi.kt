@@ -1,21 +1,26 @@
 package com.example.easyssh.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.easyssh.R
 import com.example.easyssh.ui.theme.*
 
 // ── Environment tag ──────────────────────────────────────────
@@ -41,13 +46,26 @@ enum class EnvTag(val label: String, val bg: Color, val fg: Color, val border: C
 
 @Composable
 fun EnvBadge(tag: EnvTag, modifier: Modifier = Modifier) {
-    Box(
+    val iconRes = when (tag) {
+        EnvTag.PROD -> R.drawable.env_prod
+        EnvTag.QA   -> R.drawable.env_qa
+        EnvTag.DEV  -> R.drawable.env_dev
+        EnvTag.OK   -> R.drawable.env_ok
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
             .background(tag.bg)
             .border(1.dp, tag.border, RoundedCornerShape(4.dp))
             .padding(horizontal = 6.dp, vertical = 2.dp),
     ) {
+        Image(
+            painter            = painterResource(iconRes),
+            contentDescription = tag.label,
+            modifier           = Modifier.size(11.dp),
+        )
+        Spacer(Modifier.width(4.dp))
         Text(
             text       = tag.label,
             color      = tag.fg,
@@ -56,6 +74,27 @@ fun EnvBadge(tag: EnvTag, modifier: Modifier = Modifier) {
             fontWeight = FontWeight.Bold,
         )
     }
+}
+
+/**
+ * Ikona dystrybucji serwera. Szuka zasobu `distro_<nazwa>` (np. distro_ubuntu) dorzucanego
+ * później jako PNG; gdy go nie ma, używa generycznej ikony [R.drawable.distro_linux].
+ * Dzięki temu aplikacja działa zanim wgramy logotypy, a po ich dodaniu zaświecą się automatycznie.
+ */
+@Composable
+fun DistroIcon(distro: String, modifier: Modifier = Modifier) {
+    val context = LocalContext.current
+    val resId = remember(distro) {
+        val id = context.resources.getIdentifier(
+            "distro_${distro.lowercase().trim()}", "drawable", context.packageName,
+        )
+        if (id != 0) id else R.drawable.distro_linux
+    }
+    Image(
+        painter            = painterResource(resId),
+        contentDescription = distro,
+        modifier           = modifier,
+    )
 }
 
 // ── Monospace label ──────────────────────────────────────────

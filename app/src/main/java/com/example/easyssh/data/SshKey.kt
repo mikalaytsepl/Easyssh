@@ -8,7 +8,8 @@ data class SshKey(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val name: String,
-    val keyType: String, // e.g., "RSA", "ED25519"
+    val keyType: String, // np. "RSA", "ED25519"
     val privateKey: String,
-    val publicKey: String? = null
+    val publicKey: String? = null,
+    val serverId: Int? = null
 )

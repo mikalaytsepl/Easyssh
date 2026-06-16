@@ -18,9 +18,23 @@ interface ServerDao {
     @Query("SELECT * FROM servers WHERE id = :id LIMIT 1")
     suspend fun getServerById(id: Int): Server?
 
+    @Query("SELECT COUNT(*) FROM servers")
+    suspend fun count(): Int
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertServer(server: Server)
 
     @Delete
     suspend fun deleteServer(server: Server)
+
+    // Relacja dwukierunkowa: domyślny klucz serwera (Server.keyId)
+    @Query("UPDATE servers SET keyId = :keyId WHERE id = :serverId")
+    suspend fun setDefaultKey(serverId: Int, keyId: Int?)
+
+    @Query("UPDATE servers SET keyId = NULL WHERE keyId = :keyId")
+    suspend fun clearDefaultKeyEverywhere(keyId: Int)
+
+    // Znacznik ostatniego użycia — dla sekcji "Ostatnio używane" na Dashboardzie
+    @Query("UPDATE servers SET lastConnectedAt = :ts WHERE id = :id")
+    suspend fun setLastConnected(id: Int, ts: Long)
 }

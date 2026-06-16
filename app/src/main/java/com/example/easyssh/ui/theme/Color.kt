@@ -23,3 +23,6 @@ val TextTertiary  = Color(0xFF4A5568)
 // ── Terminal ─────────────────────────────────────────────────
 val TermPrompt = Color(0xFF4A7A5A)   // linia prompt $
 val TermOutput = Color(0xFF7EC88A)   // wyjście komendy
+val SurfaceDark = Color(0xFF111318)
+val SurfaceLight = Color(0xFF181B22)
+val BorderColor = Color(0xFF1F2430)

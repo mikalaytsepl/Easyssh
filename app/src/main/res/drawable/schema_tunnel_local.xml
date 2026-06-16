@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="140dp"
+    android:height="60dp"
+    android:viewportWidth="140"
+    android:viewportHeight="60">
+    <!-- LOCAL FORWARDING (-L): laptop -> [SSH/lock] -> jump -> dest -->
+    <!-- Node A: LOCAL (laptop) -->
+    <path android:fillColor="#181B22" android:strokeColor="#00FF88" android:strokeWidth="1.5"
+        android:pathData="M8,18 L34,18 A3,3 0 0 1 37,21 L37,39 A3,3 0 0 1 34,42 L8,42 A3,3 0 0 1 5,39 L5,21 A3,3 0 0 1 8,18 Z" />
+    <path android:fillColor="#00FF88" android:pathData="M14,25 L28,25 L28,33 L14,33 Z" />
+    <path android:fillColor="#00FF88" android:pathData="M12,34 L30,34 L30,36 L12,36 Z" />
+    <!-- Node B: SSH JUMP (shield) -->
+    <path android:fillColor="#181B22" android:strokeColor="#00AAFF" android:strokeWidth="1.5"
+        android:pathData="M57,18 L83,18 A3,3 0 0 1 86,21 L86,39 A3,3 0 0 1 83,42 L57,42 A3,3 0 0 1 54,39 L54,21 A3,3 0 0 1 57,18 Z" />
+    <path android:fillColor="#00AAFF" android:pathData="M70,24 L76,26 L76,31 C76,34 73,36 70,37 C67,36 64,34 64,31 L64,26 Z" />
+    <!-- Node C: DEST (database) -->
+    <path android:fillColor="#181B22" android:strokeColor="#FFBD44" android:strokeWidth="1.5"
+        android:pathData="M106,18 L132,18 A3,3 0 0 1 135,21 L135,39 A3,3 0 0 1 132,42 L106,42 A3,3 0 0 1 103,39 L103,21 A3,3 0 0 1 106,18 Z" />
+    <path android:fillColor="#FFBD44" android:pathData="M112,26 a7,2.5 0 1 0 14,0 a7,2.5 0 1 0 -14,0 Z" />
+    <path android:fillColor="#FFBD44" android:pathData="M112,26 L112,34 a7,2.5 0 0 0 14,0 L126,26 L124,26 L124,33 a5,1.8 0 0 1 -10,0 L114,26 Z" />
+    <!-- Arrow A->B -->
+    <path android:fillColor="#00000000" android:strokeColor="#00AAFF" android:strokeWidth="2" android:pathData="M37,30 L50,30" />
+    <path android:fillColor="#00AAFF" android:pathData="M52,30 L47,27.5 L47,32.5 Z" />
+    <!-- Lock over encrypted hop -->
+    <path android:fillColor="#FFBD44" android:pathData="M41,11 L47,11 L47,16 L41,16 Z" />
+    <path android:fillColor="#00000000" android:strokeColor="#FFBD44" android:strokeWidth="1.4"
+        android:pathData="M42.2,11 L42.2,9.4 A1.8,1.8 0 0 1 45.8,9.4 L45.8,11" />
+    <!-- Arrow B->C -->
+    <path android:fillColor="#00000000" android:strokeColor="#00AAFF" android:strokeWidth="2" android:pathData="M86,30 L99,30" />
+    <path android:fillColor="#00AAFF" android:pathData="M101,30 L96,27.5 L96,32.5 Z" />
+</vector>

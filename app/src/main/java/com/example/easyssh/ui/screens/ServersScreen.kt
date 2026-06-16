@@ -11,18 +11,21 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.easyssh.EasySshApplication
 import com.example.easyssh.data.Server
 import com.example.easyssh.ui.components.*
 import com.example.easyssh.ui.theme.*
@@ -34,9 +37,16 @@ fun ServersScreen(
     viewModel: ServerViewModel = viewModel(),
 ) {
     val servers by viewModel.servers.collectAsState()
+
+    // Serwery z żywą sesją SSH (sesje przeżywają nawigację — patrz SshSessionManager)
+    val context = LocalContext.current
+    val sessionManager = remember { (context.applicationContext as EasySshApplication).sshSessionManager }
+    val activeSessions by sessionManager.activeSessions.collectAsState()
+
     var selectedFilter by remember { mutableStateOf("ALL") }
     var showAddSheet   by remember { mutableStateOf(false) }
     var searchQuery    by remember { mutableStateOf("") }
+    var editingServer  by remember { mutableStateOf<Server?>(null) }
 
     val filtered = servers
         .filter { s ->
@@ -137,9 +147,11 @@ fun ServersScreen(
                         item { SectionLabel("${envDisplayLabel(envKey)} (${envServers.size})") }
                         items(envServers, key = { it.id }) { server ->
                             ServerListCard(
-                                server   = server,
-                                onClick  = { onNavigateToTerminal(server.id.toString()) },
-                                onDelete = { viewModel.deleteServer(server) },
+                                server           = server,
+                                hasActiveSession = server.id in activeSessions,
+                                onClick          = { onNavigateToTerminal(server.id.toString()) },
+                                onEdit           = { editingServer = server },
+                                onDelete         = { viewModel.deleteServer(server) },
                             )
                             Spacer(Modifier.height(8.dp))
                         }
@@ -160,10 +172,11 @@ fun ServersScreen(
         }
     }
 
-    if (showAddSheet) {
+    if (showAddSheet || editingServer != null) {
         AddServerSheet(
-            onDismiss = { showAddSheet = false },
-            onSave    = { server -> viewModel.addServer(server); showAddSheet = false },
+            existing  = editingServer,
+            onDismiss = { showAddSheet = false; editingServer = null },
+            onSave    = { server -> viewModel.addServer(server); showAddSheet = false; editingServer = null },
         )
     }
 }
@@ -171,7 +184,13 @@ fun ServersScreen(
 // ── Server card ──────────────────────────────────────────────
 
 @Composable
-private fun ServerListCard(server: Server, onClick: () -> Unit, onDelete: () -> Unit) {
+private fun ServerListCard(
+    server: Server,
+    hasActiveSession: Boolean,
+    onClick: () -> Unit,
+    onEdit: () -> Unit,
+    onDelete: () -> Unit,
+) {
     val envTag = envTagFor(server.environment)
     var confirmDelete by remember { mutableStateOf(false) }
 
@@ -192,7 +211,7 @@ private fun ServerListCard(server: Server, onClick: () -> Unit, onDelete: () -> 
                 .clip(RoundedCornerShape(8.dp))
                 .background(envTag.bg),
         ) {
-            Text(envEmojiFor(server.environment), fontSize = 20.sp)
+            DistroIcon(server.distro, Modifier.size(24.dp))
         }
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {
@@ -207,9 +226,23 @@ private fun ServerListCard(server: Server, onClick: () -> Unit, onDelete: () -> 
                 ) {
                     Text(server.name, color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
                     EnvBadge(tag = envTag)
+                    if (hasActiveSession) {
+                        Text(
+                            text       = "● SSH",
+                            color      = AccentGreen,
+                            fontSize   = 10.sp,
+                            fontFamily = FontFamily.Monospace,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
                 }
-                IconButton(onClick = { confirmDelete = true }, Modifier.size(24.dp)) {
-                    Icon(Icons.Filled.Delete, "Usuń", tint = TextTertiary, modifier = Modifier.size(16.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onEdit, Modifier.size(24.dp)) {
+                        Icon(Icons.Filled.Edit, "Edytuj", tint = TextTertiary, modifier = Modifier.size(15.dp))
+                    }
+                    IconButton(onClick = { confirmDelete = true }, Modifier.size(24.dp)) {
+                        Icon(Icons.Filled.Delete, "Usuń", tint = TextTertiary, modifier = Modifier.size(16.dp))
+                    }
                 }
             }
             MonoLabel("${server.ip} · port ${server.port}", fontSize = 11)

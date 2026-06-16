@@ -1,5 +1,6 @@
 package com.example.easyssh.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
@@ -12,5 +13,8 @@ data class Server(
     val port: Int = 22,
     val username: String,
     val environment: String,
-    val keyId: Int? = null
+    val distro: String = "linux",     // dystrybucja (ubuntu/debian/centos/...) — dla ikony serwera
+    val keyId: Int? = null,
+    @ColumnInfo(defaultValue = "0")
+    val lastConnectedAt: Long = 0     // znacznik ostatniego użycia — dla sekcji "Ostatnio używane"
 )
