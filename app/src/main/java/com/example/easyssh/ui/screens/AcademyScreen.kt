@@ -1,7 +1,11 @@
 package com.example.easyssh.ui.screens
 
+import android.net.Uri
+import android.widget.MediaController
+import android.widget.VideoView
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,6 +22,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -25,6 +32,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import com.example.easyssh.R
 import com.example.easyssh.ui.components.*
 import com.example.easyssh.ui.theme.*
 
@@ -124,6 +133,13 @@ fun AcademyScreen() {
 
         SectionLabel("Schematy")
         AsymmetricCryptoDiagram()
+        Spacer(Modifier.height(10.dp))
+        SchemaImageCard(R.drawable.schema_asymmetric_crypto, "Kryptografia asymetryczna", "Klucz prywatny podpisuje challenge, publiczny go weryfikuje.")
+        SchemaImageCard(R.drawable.schema_ssh_handshake, "Handshake SSH", "Wymiana wersji, uzgodnienie kluczy i uwierzytelnienie.")
+        SchemaImageCard(R.drawable.schema_key_auth, "Uwierzytelnianie kluczem", "Klucz prywatny pasuje do publicznego zapisanego na serwerze.")
+        SchemaImageCard(R.drawable.schema_tunnel_dynamic, "Tunel dynamiczny (-D)", "Lokalne proxy SOCKS kierujące ruch przez serwer SSH.")
+        SchemaImageCard(R.drawable.schema_port_forward, "Przekierowanie portu", "Mapowanie portu lokalnego na port zdalny.")
+        SchemaImageCard(R.drawable.schema_encryption, "Szyfrowanie ruchu", "Dane przechodzą przez zaszyfrowany kanał SSH.")
 
         Spacer(Modifier.height(80.dp))
     }
@@ -133,6 +149,12 @@ fun AcademyScreen() {
 
 @Composable
 private fun FeaturedVideoCard() {
+    val context = LocalContext.current
+    // Wideo dorzucane później jako res/raw/ed25519_tutorial.mp4. Gdy plik istnieje — gramy go,
+    // dopóki go nie ma — pokazujemy podgląd-zaślepkę. Brak pliku nie psuje kompilacji.
+    val videoResId = remember {
+        context.resources.getIdentifier("ed25519_tutorial", "raw", context.packageName)
+    }
     SshCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -161,36 +183,58 @@ private fun FeaturedVideoCard() {
             }
         }
         Spacer(Modifier.height(10.dp))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(150.dp)
-                .clip(RoundedCornerShape(10.dp))
-                .background(TerminalBg)
-                .border(1.dp, BorderClr, RoundedCornerShape(10.dp)),
-        ) {
-            Box(
-                contentAlignment = Alignment.Center,
+        if (videoResId != 0) {
+            // Odtwarzacz realnego wideo z res/raw (z kontrolkami)
+            AndroidView(
+                factory = { ctx ->
+                    VideoView(ctx).apply {
+                        setVideoURI(Uri.parse("android.resource://${ctx.packageName}/$videoResId"))
+                        val controller = MediaController(ctx)
+                        controller.setAnchorView(this)
+                        setMediaController(controller)
+                        setOnPreparedListener { seekTo(1) }
+                    }
+                },
                 modifier = Modifier
-                    .align(Alignment.Center)
-                    .size(56.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.radialGradient(
-                            listOf(AccentBlue.copy(alpha = 0.30f), Color.Transparent)
-                        )
-                    ),
-            ) {
-                Text("▶", color = AccentBlue, fontSize = 24.sp)
-            }
-            MonoLabel(
-                "Ed25519 Key Generation Tutorial",
-                TextTertiary,
-                10,
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = 10.dp, bottom = 8.dp),
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(TerminalBg)
+                    .border(1.dp, BorderClr, RoundedCornerShape(10.dp)),
             )
+        } else {
+            // Podgląd-zaślepka dopóki nie dodano pliku wideo
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(150.dp)
+                    .clip(RoundedCornerShape(10.dp))
+                    .background(TerminalBg)
+                    .border(1.dp, BorderClr, RoundedCornerShape(10.dp)),
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .align(Alignment.Center)
+                        .size(56.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.radialGradient(
+                                listOf(AccentBlue.copy(alpha = 0.30f), Color.Transparent)
+                            )
+                        ),
+                ) {
+                    Text("▶", color = AccentBlue, fontSize = 24.sp)
+                }
+                MonoLabel(
+                    "Ed25519 Key Generation Tutorial",
+                    TextTertiary,
+                    10,
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(start = 10.dp, bottom = 8.dp),
+                )
+            }
         }
     }
 }
@@ -283,6 +327,30 @@ private fun TagChip(label: String, tag: EnvTag) {
             fontWeight = FontWeight.Bold,
         )
     }
+}
+
+// ── Karta schematu (obraz + opis) ─────────────────────────────
+
+@Composable
+private fun SchemaImageCard(resId: Int, title: String, subtitle: String) {
+    SshCard {
+        Text(title, color = TextPrimary, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(2.dp))
+        Text(subtitle, color = TextSecondary, fontSize = 11.sp, lineHeight = 15.sp)
+        Spacer(Modifier.height(8.dp))
+        Image(
+            painter = painterResource(resId),
+            contentDescription = title,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(96.dp)
+                .clip(RoundedCornerShape(8.dp))
+                .background(TerminalBg)
+                .padding(8.dp),
+        )
+    }
+    Spacer(Modifier.height(10.dp))
 }
 
 // ── Schemat: kryptografia asymetryczna ────────────────────────

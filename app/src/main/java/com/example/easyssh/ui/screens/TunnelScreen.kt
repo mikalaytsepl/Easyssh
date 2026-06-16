@@ -4,6 +4,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,13 +26,17 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.easyssh.R
 import com.example.easyssh.ui.components.MonoLabel
 import com.example.easyssh.ui.components.SectionLabel
 import com.example.easyssh.ui.components.SshCard
 import com.example.easyssh.ui.theme.*
+import com.example.easyssh.util.SoundFx
 
 @Composable
 fun TunnelScreen() {
@@ -127,45 +132,24 @@ fun TunnelScreen() {
                 SectionLabel(if (tabIndex == 0) "SCHEMAT TUNELU: LOCAL FORWARDING" else "SCHEMAT TUNELU: REMOTE FORWARDING")
                 Spacer(modifier = Modifier.height(8.dp))
 
+                Image(
+                    painter = painterResource(
+                        if (tabIndex == 0) R.drawable.schema_tunnel_local else R.drawable.schema_tunnel_remote
+                    ),
+                    contentDescription = "Schemat tunelu SSH",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(92.dp),
+                    contentScale = ContentScale.Fit
+                )
+                Spacer(modifier = Modifier.height(6.dp))
                 Row(
                     modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    // Węzeł 1
-                    DiagramNode(
-                        icon = if (tabIndex == 0) "💻" else "🖥️",
-                        label = if (tabIndex == 0) "LOCAL" else "REMOTE",
-                        color = if (tabIndex == 0) AccentGreen else AccentYellow
-                    )
-
-                    // Linia 1
-                    DiagramLine(
-                        text = if (tabIndex == 0) "🔒 SSH ➔" else "🔒 SSH ➔",
-                        color = AccentBlue,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    // Węzeł 2 (Pośrednik)
-                    DiagramNode(
-                        icon = "🛡️",
-                        label = "SSH JUMP",
-                        color = AccentBlue
-                    )
-
-                    // Linia 2
-                    DiagramLine(
-                        text = if (tabIndex == 0) "➔" else "➔",
-                        color = if (tabIndex == 0) AccentYellow else AccentGreen,
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    // Węzeł 3
-                    DiagramNode(
-                        icon = if (tabIndex == 0) "🗄️" else "💻",
-                        label = if (tabIndex == 0) "DEST" else "LOCAL",
-                        color = if (tabIndex == 0) AccentYellow else AccentGreen
-                    )
+                    MonoLabel(if (tabIndex == 0) "LOCAL" else "REMOTE", AccentGreen, 9)
+                    MonoLabel("SSH JUMP", AccentBlue, 9)
+                    MonoLabel(if (tabIndex == 0) "DEST" else "LOCAL", AccentYellow, 9)
                 }
             }
 
@@ -237,6 +221,7 @@ fun TunnelScreen() {
                                 val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                 val clip = ClipData.newPlainText("SSH Tunnel Command", generatedCommand)
                                 clipboard.setPrimaryClip(clip)
+                                SoundFx.playCopy() // cichy dźwięk sukcesu kopiowania
                                 Toast.makeText(context, "Komenda skopiowana!", Toast.LENGTH_SHORT).show()
                             }
                         )

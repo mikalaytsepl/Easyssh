@@ -33,6 +33,7 @@ import com.example.easyssh.data.SshKey
 import com.example.easyssh.ui.theme.*
 import com.example.easyssh.ui.viewmodel.ServerViewModel
 import com.example.easyssh.ui.viewmodel.SshKeyViewModel
+import com.example.easyssh.util.SoundFx
 
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.KeyPair
@@ -247,6 +248,7 @@ fun KeyCard(key: SshKey, context: Context, onDeleteClick: () -> Unit) {
                     val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     val clip = ClipData.newPlainText("Public Key", key.publicKey ?: "Brak danych")
                     clipboardManager.setPrimaryClip(clip)
+                    SoundFx.playCopy() // cichy dźwięk sukcesu kopiowania
                     Toast.makeText(context, "Klucz publiczny skopiowany!", Toast.LENGTH_SHORT).show()
                 }
                 .padding(8.dp)

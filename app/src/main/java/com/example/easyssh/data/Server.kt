@@ -12,5 +12,6 @@ data class Server(
     val port: Int = 22,
     val username: String,
     val environment: String,
+    val distro: String = "linux",     // dystrybucja (ubuntu/debian/centos/...) — dla ikony serwera
     val keyId: Int? = null
 )

@@ -40,6 +40,7 @@ import com.example.easyssh.ui.viewmodel.ServerViewModel
 import com.example.easyssh.ui.viewmodel.SnippetViewModel
 import com.example.easyssh.ui.viewmodel.SshKeyViewModel
 import com.example.easyssh.ui.viewmodel.TerminalViewModel
+import com.example.easyssh.util.SoundFx
 import kotlinx.coroutines.launch
 
 private val quickCommands = listOf("top", "df -h", "netstat -tulpn", "systemctl status")
@@ -67,6 +68,11 @@ fun TerminalScreen(
     val sshSession = remember(server.id) { terminalViewModel.sessionFor(server.id) }
     val connectionState by sshSession.state.collectAsState()
     val isConnected = connectionState is ConnectionState.Connected
+
+    // Audio: terminalowy beep przy błędzie połączenia (np. timeout) — wymóg multimedialny
+    LaunchedEffect(connectionState) {
+        if (connectionState is ConnectionState.Error) SoundFx.playError()
+    }
 
     // Pobieramy klucze i filtrujemy tylko te przypisane do tego konkretnego serwera
     val allKeys by keysViewModel.keys.collectAsState()

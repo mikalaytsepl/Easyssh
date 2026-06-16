@@ -206,7 +206,7 @@ private fun ServerListCard(
                 .clip(RoundedCornerShape(8.dp))
                 .background(envTag.bg),
         ) {
-            Text(envEmojiFor(server.environment), fontSize = 20.sp)
+            DistroIcon(server.distro, Modifier.size(24.dp))
         }
         Spacer(Modifier.width(10.dp))
         Column(Modifier.weight(1f)) {

@@ -29,6 +29,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.easyssh.data.Snippet
 import com.example.easyssh.ui.theme.*
 import com.example.easyssh.ui.viewmodel.SnippetViewModel
+import com.example.easyssh.util.SoundFx
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -205,6 +206,7 @@ fun SnippetCard(snippet: Snippet, context: Context, onDelete: () -> Unit) {
                         val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         val clip = ClipData.newPlainText("Command", snippet.command)
                         clipboardManager.setPrimaryClip(clip)
+                        SoundFx.playCopy() // cichy dźwięk sukcesu kopiowania
                         Toast.makeText(context, "Skopiowano!", Toast.LENGTH_SHORT).show()
                     }
                     .padding(start = 8.dp)

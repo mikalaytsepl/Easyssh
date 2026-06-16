@@ -230,7 +230,7 @@ private fun RecentServerCard(server: Server, onClick: () -> Unit) {
                 .clip(RoundedCornerShape(8.dp))
                 .background(envTag.bg),
         ) {
-            Text(text = envEmojiFor(server.environment), fontSize = 18.sp)
+            DistroIcon(server.distro, Modifier.size(22.dp))
         }
         Spacer(Modifier.width(10.dp))
         Column(modifier = Modifier.weight(1f)) {
