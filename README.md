@@ -57,10 +57,7 @@ Biblioteki i komponenty firm trzecich oraz pochodzenie zasobów multimedialnych:
 | Diagramy (`docs/images/*.png`) | [draw.io / diagrams.net](https://www.drawio.com/) | schemat aplikacji i bazy danych |
 | Ikony dystrybucji Linuksa (PNG) | znaki towarowe odpowiednich projektów (Ubuntu, Debian, CentOS, Fedora, Rocky) | rozpoznawanie systemu serwera |
 | Efekty dźwiękowe (`res/raw/*.mp3`) | darmowa biblioteka [Pixabay](https://pixabay.com/sound-effects/) (autorzy: *SoundShelfStudio*, *Universfield*) | dźwięk sukcesu / błędu |
-| Materiał wideo (`res/raw/ed25519_tutorial.mp4`) | materiał własny (instruktaż) | sekcja „Akademia" |
-
-> Logo dystrybucji Linuksa są znakami towarowymi ich właścicieli i wykorzystano je wyłącznie
-> w celach identyfikacji wizualnej serwerów w projekcie edukacyjnym.
+| Materiał wideo (`res/raw/ed25519_tutorial.mp4`) | [Wideo open source z YouTube](https://www.youtube.com/watch?v=3PHfKFhvldc) | sekcja „Akademia" |
 
 ## Projekt Ekranów
 
