@@ -84,6 +84,8 @@ dependencies {
     // SSH Client
     implementation("com.github.mwiede:jsch:0.2.17")
     implementation("org.bouncycastle:bcprov-jdk18on:1.78.1")
+    // Ed25519 dla JSch na Androidzie (JCE/EdDSA Androida bywa niekompletne)
+    implementation("net.i2p.crypto:eddsa:0.3.0")
 
     // Testing
     testImplementation("junit:junit:4.13.2")

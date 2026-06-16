@@ -2,6 +2,7 @@ package com.example.easyssh.ssh
 
 import com.example.easyssh.data.Server
 import com.example.easyssh.data.SshKey
+import com.example.easyssh.security.KeyVault
 import com.jcraft.jsch.ChannelShell
 import com.jcraft.jsch.JSch
 import com.jcraft.jsch.Session
@@ -64,8 +65,20 @@ class SshSession(
                 val jsch = JSch()
 
                 sshKey?.let { key ->
-                    val pass = passphrase?.takeIf { it.isNotEmpty() }?.toByteArray()
-                    jsch.addIdentity(key.name, key.privateKey.toByteArray(), null, pass)
+                    val rawPem = key.privateKey
+                    if (KeyVault.isProtected(rawPem)) {
+                        // Klucz chroniony naszym passphrase — odszyfruj do postaci jawnej
+                        val plain = try {
+                            KeyVault.decrypt(rawPem, passphrase ?: "")
+                        } catch (e: Exception) {
+                            throw RuntimeException("Błędne hasło klucza (passphrase)")
+                        }
+                        jsch.addIdentity(key.name, plain.toByteArray(), null, null)
+                    } else {
+                        // Klucz jawny lub zaszyfrowany standardowo (import) — passphrase przekazujemy do JSch
+                        val pass = passphrase?.takeIf { it.isNotEmpty() }?.toByteArray()
+                        jsch.addIdentity(key.name, rawPem.toByteArray(), null, pass)
+                    }
                 }
 
                 val username = server.username.trim()

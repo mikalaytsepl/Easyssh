@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.easyssh.data.Server
 import com.example.easyssh.data.SshKey
+import com.example.easyssh.security.KeyVault
+import com.example.easyssh.ssh.Ed25519KeyGen
 import com.example.easyssh.ssh.KeyInstaller
 import com.example.easyssh.ui.theme.*
 import com.example.easyssh.ui.viewmodel.ServerViewModel
@@ -192,33 +194,32 @@ fun KeysScreen(
 
                     coroutineScope.launch {
                         try {
-                            val (realPriv, realPub) = withContext(Dispatchers.IO) {
-                                val jsch = JSch()
-
-                                // Generowanie pary kluczy wg wybranego algorytmu
-                                val keyPair = when (type) {
-                                    "Ed25519"   -> KeyPair.genKeyPair(jsch, KeyPair.ED25519, 256)
-                                    "ECDSA 256" -> KeyPair.genKeyPair(jsch, KeyPair.ECDSA, 256)
-                                    else        -> KeyPair.genKeyPair(jsch, KeyPair.RSA, 4096)
-                                }
-
-                                val privOut = ByteArrayOutputStream()
-                                val pubOut = ByteArrayOutputStream()
-
-                                if (passphrase.isNotBlank()) {
-                                    keyPair.writePrivateKey(privOut, passphrase.toByteArray())
+                            val (rawPriv, realPub) = withContext(Dispatchers.IO) {
+                                if (type == "Ed25519") {
+                                    // Ed25519 generujemy przez Bouncy Castle (omija niedostępne JCE/EdDSA Androida)
+                                    Ed25519KeyGen.generate("easyssh-$name")
                                 } else {
+                                    val jsch = JSch()
+                                    val keyPair = when (type) {
+                                        "ECDSA 256" -> KeyPair.genKeyPair(jsch, KeyPair.ECDSA, 256)
+                                        else        -> KeyPair.genKeyPair(jsch, KeyPair.RSA, 4096)
+                                    }
+
+                                    val privOut = ByteArrayOutputStream()
+                                    val pubOut = ByteArrayOutputStream()
+
                                     keyPair.writePrivateKey(privOut)
+                                    keyPair.writePublicKey(pubOut, "easyssh-$name")
+
+                                    val result = privOut.toString("UTF-8") to pubOut.toString("UTF-8")
+                                    keyPair.dispose()
+                                    result
                                 }
-                                keyPair.writePublicKey(pubOut, "easyssh-$name")
-
-                                val privStr = privOut.toString("UTF-8")
-                                val pubStr = pubOut.toString("UTF-8")
-
-                                keyPair.dispose()
-
-                                Pair(privStr, pubStr)
                             }
+
+                            // Passphrase: jednolita ochrona klucza prywatnego (PBKDF2 + AES-GCM),
+                            // odszyfrowywana przy łączeniu. Działa tak samo dla każdego algorytmu.
+                            val realPriv = if (passphrase.isNotBlank()) KeyVault.encrypt(rawPriv, passphrase) else rawPriv
 
                             viewModel.addKey(
                                 SshKey(
