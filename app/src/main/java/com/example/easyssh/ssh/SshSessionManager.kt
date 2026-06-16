@@ -55,7 +55,7 @@ class SshSession(
         onStateChanged(serverId, newState)
     }
 
-    fun connect(server: Server, password: String? = null, sshKey: SshKey? = null) {
+    fun connect(server: Server, password: String? = null, sshKey: SshKey? = null, passphrase: String? = null) {
         if (_state.value is ConnectionState.Connecting || _state.value is ConnectionState.Connected) return
         setState(ConnectionState.Connecting)
 
@@ -64,7 +64,8 @@ class SshSession(
                 val jsch = JSch()
 
                 sshKey?.let { key ->
-                    jsch.addIdentity(key.name, key.privateKey.toByteArray(), null, null)
+                    val pass = passphrase?.takeIf { it.isNotEmpty() }?.toByteArray()
+                    jsch.addIdentity(key.name, key.privateKey.toByteArray(), null, pass)
                 }
 
                 val username = server.username.trim()

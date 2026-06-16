@@ -187,7 +187,7 @@ fun KeysScreen(
                 servers = servers,
                 isGenerating = isGeneratingKey,
                 onDismiss = { showGenerateDialog = false },
-                onGenerate = { name, type, serverId ->
+                onGenerate = { name, type, serverId, passphrase ->
                     isGeneratingKey = true
 
                     coroutineScope.launch {
@@ -205,7 +205,11 @@ fun KeysScreen(
                                 val privOut = ByteArrayOutputStream()
                                 val pubOut = ByteArrayOutputStream()
 
-                                keyPair.writePrivateKey(privOut)
+                                if (passphrase.isNotBlank()) {
+                                    keyPair.writePrivateKey(privOut, passphrase.toByteArray())
+                                } else {
+                                    keyPair.writePrivateKey(privOut)
+                                }
                                 keyPair.writePublicKey(pubOut, "easyssh-$name")
 
                                 val privStr = privOut.toString("UTF-8")
@@ -536,13 +540,14 @@ fun GenerateKeyDialog(
     servers: List<Server>,
     isGenerating: Boolean,
     onDismiss: () -> Unit,
-    onGenerate: (String, String, Int?) -> Unit
+    onGenerate: (String, String, Int?, String) -> Unit
 ) {
     var keyName by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf("Ed25519") }
 
     var selectedServerId by remember { mutableStateOf<Int?>(null) }
     var serverExpanded by remember { mutableStateOf(false) }
+    var passphrase by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = { if (!isGenerating) onDismiss() },
@@ -625,11 +630,28 @@ fun GenerateKeyDialog(
                         }
                     }
                 }
+
+                Spacer(modifier = Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = passphrase,
+                    onValueChange = { passphrase = it },
+                    label = { Text("Hasło klucza / passphrase (opcjonalnie)") },
+                    singleLine = true,
+                    enabled = !isGenerating,
+                    visualTransformation = PasswordVisualTransformation(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedTextColor = TextPrimary,
+                        unfocusedTextColor = TextPrimary,
+                        cursorColor = AccentGreen,
+                        focusedBorderColor = AccentGreen,
+                        unfocusedBorderColor = BorderColor
+                    )
+                )
             }
         },
         confirmButton = {
             TextButton(
-                onClick = { if (keyName.isNotBlank() && !isGenerating) onGenerate(keyName, selectedType, selectedServerId) },
+                onClick = { if (keyName.isNotBlank() && !isGenerating) onGenerate(keyName, selectedType, selectedServerId, passphrase) },
                 enabled = !isGenerating && keyName.isNotBlank()
             ) {
                 if (isGenerating) {

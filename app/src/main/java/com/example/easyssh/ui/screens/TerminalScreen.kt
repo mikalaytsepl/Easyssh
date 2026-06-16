@@ -86,6 +86,7 @@ fun TerminalScreen(
     var showSnippetsSheet by remember { mutableStateOf(false) }
     var selectedAuthMethod by remember { mutableStateOf("PASSWORD") } // "PASSWORD" lub "KEY_id"
     var passwordInput by remember { mutableStateOf("") }
+    var keyPassphraseInput by remember { mutableStateOf("") }
 
     if (showConnectDialog) {
         AlertDialog(
@@ -151,6 +152,24 @@ fun TerminalScreen(
                         Spacer(Modifier.height(8.dp))
                         Text("Brak dostępnych kluczy SSH.", color = TextTertiary, fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(start = 12.dp))
                     }
+
+                    // Passphrase klucza (opcjonalnie) — pokazywane przy wyborze klucza
+                    if (selectedAuthMethod.startsWith("KEY_")) {
+                        Spacer(Modifier.height(8.dp))
+                        TextField(
+                            value = keyPassphraseInput,
+                            onValueChange = { keyPassphraseInput = it },
+                            placeholder = { Text("Passphrase klucza (jeśli ustawione)", fontSize = 12.sp) },
+                            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                            singleLine = true,
+                            modifier = Modifier.fillMaxWidth().padding(start = 32.dp),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = BgDeep,
+                                unfocusedContainerColor = BgDeep,
+                                focusedIndicatorColor = AccentGreen
+                            )
+                        )
+                    }
                 }
             },
             confirmButton = {
@@ -160,7 +179,7 @@ fun TerminalScreen(
                         terminalViewModel.connect(server, password = passwordInput)
                     } else {
                         val keyId = selectedAuthMethod.removePrefix("KEY_").toIntOrNull()
-                        terminalViewModel.connect(server, selectedKeyId = keyId)
+                        terminalViewModel.connect(server, selectedKeyId = keyId, keyPassphrase = keyPassphraseInput)
                     }
                 }) {
                     Text("POŁĄCZ", color = AccentGreen, fontWeight = FontWeight.Bold)

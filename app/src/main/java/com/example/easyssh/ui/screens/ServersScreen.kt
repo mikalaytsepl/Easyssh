@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -45,6 +46,7 @@ fun ServersScreen(
     var selectedFilter by remember { mutableStateOf("ALL") }
     var showAddSheet   by remember { mutableStateOf(false) }
     var searchQuery    by remember { mutableStateOf("") }
+    var editingServer  by remember { mutableStateOf<Server?>(null) }
 
     val filtered = servers
         .filter { s ->
@@ -148,6 +150,7 @@ fun ServersScreen(
                                 server           = server,
                                 hasActiveSession = server.id in activeSessions,
                                 onClick          = { onNavigateToTerminal(server.id.toString()) },
+                                onEdit           = { editingServer = server },
                                 onDelete         = { viewModel.deleteServer(server) },
                             )
                             Spacer(Modifier.height(8.dp))
@@ -169,10 +172,11 @@ fun ServersScreen(
         }
     }
 
-    if (showAddSheet) {
+    if (showAddSheet || editingServer != null) {
         AddServerSheet(
-            onDismiss = { showAddSheet = false },
-            onSave    = { server -> viewModel.addServer(server); showAddSheet = false },
+            existing  = editingServer,
+            onDismiss = { showAddSheet = false; editingServer = null },
+            onSave    = { server -> viewModel.addServer(server); showAddSheet = false; editingServer = null },
         )
     }
 }
@@ -184,6 +188,7 @@ private fun ServerListCard(
     server: Server,
     hasActiveSession: Boolean,
     onClick: () -> Unit,
+    onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
     val envTag = envTagFor(server.environment)
@@ -231,8 +236,13 @@ private fun ServerListCard(
                         )
                     }
                 }
-                IconButton(onClick = { confirmDelete = true }, Modifier.size(24.dp)) {
-                    Icon(Icons.Filled.Delete, "Usuń", tint = TextTertiary, modifier = Modifier.size(16.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = onEdit, Modifier.size(24.dp)) {
+                        Icon(Icons.Filled.Edit, "Edytuj", tint = TextTertiary, modifier = Modifier.size(15.dp))
+                    }
+                    IconButton(onClick = { confirmDelete = true }, Modifier.size(24.dp)) {
+                        Icon(Icons.Filled.Delete, "Usuń", tint = TextTertiary, modifier = Modifier.size(16.dp))
+                    }
                 }
             }
             MonoLabel("${server.ip} · port ${server.port}", fontSize = 11)

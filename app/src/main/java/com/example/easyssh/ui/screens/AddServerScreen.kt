@@ -32,16 +32,17 @@ import com.example.easyssh.ui.theme.*
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddServerSheet(
+    existing: Server? = null,
     onDismiss: () -> Unit,
     onSave: (Server) -> Unit,
 ) {
-    var name        by remember { mutableStateOf("") }
-    var ip          by remember { mutableStateOf("") }
-    var port        by remember { mutableStateOf("22") }
-    var username    by remember { mutableStateOf("") }
-    var environment by remember { mutableStateOf("DEV") }
+    var name        by remember { mutableStateOf(existing?.name ?: "") }
+    var ip          by remember { mutableStateOf(existing?.ip ?: "") }
+    var port        by remember { mutableStateOf(existing?.port?.toString() ?: "22") }
+    var username    by remember { mutableStateOf(existing?.username ?: "") }
+    var environment by remember { mutableStateOf(existing?.environment?.uppercase() ?: "DEV") }
     var envExpanded by remember { mutableStateOf(false) }
-    var distro      by remember { mutableStateOf("ubuntu") }
+    var distro      by remember { mutableStateOf(existing?.distro ?: "ubuntu") }
     var distroExpanded by remember { mutableStateOf(false) }
 
     val envOptions    = listOf("PROD", "QA", "DEV")
@@ -71,7 +72,7 @@ fun AddServerSheet(
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text("// ", color = AccentGreen, fontSize = 13.sp, fontFamily = FontFamily.Monospace)
-                Text("Nowy Serwer", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text(if (existing != null) "Edytuj Serwer" else "Nowy Serwer", color = TextPrimary, fontSize = 20.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(18.dp))
 
@@ -169,7 +170,7 @@ fun AddServerSheet(
                         else Brush.horizontalGradient(listOf(BorderClr, BorderClr))
                     )
                     .clickable(enabled = isValid) {
-                        onSave(Server(name = name.trim(), ip = ip.trim(), port = port.toIntOrNull() ?: 22, username = username.trim(), environment = environment, distro = distro))
+                        onSave(Server(id = existing?.id ?: 0, name = name.trim(), ip = ip.trim(), port = port.toIntOrNull() ?: 22, username = username.trim(), environment = environment, distro = distro, keyId = existing?.keyId, lastConnectedAt = existing?.lastConnectedAt ?: 0))
                     }
                     .padding(vertical = 14.dp),
             ) {

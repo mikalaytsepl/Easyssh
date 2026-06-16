@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.easyssh.EasySshApplication
 import com.example.easyssh.data.SshKey
 import com.example.easyssh.data.SshKeyRepository
+import com.example.easyssh.security.CryptoManager
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -30,7 +31,9 @@ class SshKeyViewModel(app: Application) : AndroidViewModel(app) {
      */
     fun addKey(key: SshKey) {
         viewModelScope.launch {
-            val newId = keyDao.insertKey(key).toInt()
+            // Szyfrowanie klucza prywatnego w spoczynku (Android Keystore); klucz publiczny jawnie
+            val toStore = key.copy(privateKey = CryptoManager.encrypt(key.privateKey))
+            val newId = keyDao.insertKey(toStore).toInt()
             key.serverId?.let { sid -> serverDao.setDefaultKey(sid, newId) }
         }
     }

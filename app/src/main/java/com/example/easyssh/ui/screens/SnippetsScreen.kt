@@ -36,12 +36,17 @@ import com.example.easyssh.util.SoundFx
 fun SnippetsScreen(viewModel: SnippetViewModel = viewModel()) {
     val context = LocalContext.current
     var searchQuery by remember { mutableStateOf("") }
+    var selectedCategory by remember { mutableStateOf("Wszystkie") }
     val snippets by viewModel.snippets.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingSnippet by remember { mutableStateOf<Snippet?>(null) }
 
-    // Filtrowanie z wyszukiwarki
-    val filteredSnippets = if (searchQuery.isEmpty()) snippets else snippets.filter {
-        it.title.contains(searchQuery, ignoreCase = true) || it.command.contains(searchQuery, ignoreCase = true)
+    // Filtrowanie po kategorii + wyszukiwarce
+    val filteredSnippets = snippets.filter { s ->
+        (selectedCategory == "Wszystkie" || s.category == selectedCategory) &&
+            (searchQuery.isEmpty() ||
+                s.title.contains(searchQuery, ignoreCase = true) ||
+                s.command.contains(searchQuery, ignoreCase = true))
     }
 
     Scaffold(
@@ -90,9 +95,15 @@ fun SnippetsScreen(viewModel: SnippetViewModel = viewModel()) {
             Spacer(modifier = Modifier.height(10.dp))
 
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                item { CategoryTag("Wszystkie", AccentGreen, true) }
-                item { CategoryTag("Docker", AccentBlue, false) }
-                item { CategoryTag("System", AccentRed, false) }
+                val categories = listOf("Wszystkie") + snippets.map { it.category }.distinct()
+                items(categories) { cat ->
+                    CategoryTag(
+                        text = cat,
+                        color = if (cat == "Wszystkie") AccentGreen else AccentBlue,
+                        isSelected = selectedCategory == cat,
+                        onClick = { selectedCategory = cat }
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -116,6 +127,7 @@ fun SnippetsScreen(viewModel: SnippetViewModel = viewModel()) {
                         SnippetCard(
                             snippet = snippet,
                             context = context,
+                            onEdit = { editingSnippet = snippet },
                             onDelete = { viewModel.deleteSnippet(snippet) }
                         )
                         Spacer(modifier = Modifier.height(10.dp))
@@ -124,12 +136,14 @@ fun SnippetsScreen(viewModel: SnippetViewModel = viewModel()) {
             }
         }
 
-        if (showAddDialog) {
+        if (showAddDialog || editingSnippet != null) {
             AddSnippetDialog(
-                onDismiss = { showAddDialog = false },
+                existing = editingSnippet,
+                onDismiss = { showAddDialog = false; editingSnippet = null },
                 onAdd = { title, cat, cmd ->
-                    viewModel.addSnippet(Snippet(title = title, category = cat, command = cmd))
+                    viewModel.addSnippet(Snippet(id = editingSnippet?.id ?: 0, title = title, category = cat, command = cmd))
                     showAddDialog = false
+                    editingSnippet = null
                 }
             )
         }
@@ -137,7 +151,7 @@ fun SnippetsScreen(viewModel: SnippetViewModel = viewModel()) {
 }
 
 @Composable
-fun CategoryTag(text: String, color: Color, isSelected: Boolean) {
+fun CategoryTag(text: String, color: Color, isSelected: Boolean, onClick: (() -> Unit)? = null) {
     Text(
         text = text,
         color = color,
@@ -145,14 +159,15 @@ fun CategoryTag(text: String, color: Color, isSelected: Boolean) {
         fontWeight = FontWeight.Bold,
         fontFamily = FontFamily.Monospace,
         modifier = Modifier
-            .background(color.copy(alpha = 0.15f), RoundedCornerShape(4.dp))
+            .background(color.copy(alpha = if (isSelected) 0.25f else 0.15f), RoundedCornerShape(4.dp))
             .border(1.dp, color.copy(alpha = if (isSelected) 0.8f else 0.3f), RoundedCornerShape(4.dp))
+            .then(if (onClick != null) Modifier.clickable { onClick() } else Modifier)
             .padding(horizontal = 8.dp, vertical = 4.dp)
     )
 }
 
 @Composable
-fun SnippetCard(snippet: Snippet, context: Context, onDelete: () -> Unit) {
+fun SnippetCard(snippet: Snippet, context: Context, onEdit: () -> Unit, onDelete: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -169,6 +184,13 @@ fun SnippetCard(snippet: Snippet, context: Context, onDelete: () -> Unit) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 CategoryTag(snippet.category, AccentYellow, false)
                 Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "✏️",
+                    fontSize = 14.sp,
+                    modifier = Modifier
+                        .clickable { onEdit() }
+                        .padding(end = 8.dp)
+                )
                 Icon(
                     imageVector = Icons.Filled.Delete,
                     contentDescription = "Usuń",
@@ -217,15 +239,15 @@ fun SnippetCard(snippet: Snippet, context: Context, onDelete: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AddSnippetDialog(onDismiss: () -> Unit, onAdd: (String, String, String) -> Unit) {
-    var title by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("System") }
-    var command by remember { mutableStateOf("") }
+fun AddSnippetDialog(existing: Snippet? = null, onDismiss: () -> Unit, onAdd: (String, String, String) -> Unit) {
+    var title by remember { mutableStateOf(existing?.title ?: "") }
+    var category by remember { mutableStateOf(existing?.category ?: "System") }
+    var command by remember { mutableStateOf(existing?.command ?: "") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         containerColor = SurfaceLight,
-        title = { Text("Dodaj Snippet", color = TextPrimary) },
+        title = { Text(if (existing != null) "Edytuj Snippet" else "Dodaj Snippet", color = TextPrimary) },
         text = {
             Column {
                 OutlinedTextField(

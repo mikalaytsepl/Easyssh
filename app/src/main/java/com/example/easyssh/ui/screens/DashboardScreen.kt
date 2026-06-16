@@ -306,10 +306,3 @@ fun envTagFor(env: String): EnvTag = when (env.uppercase()) {
     "DEV", "DEVELOPMENT"              -> EnvTag.DEV
     else                              -> EnvTag.OK
 }
-
-fun envEmojiFor(env: String): String = when (env.uppercase()) {
-    "PROD", "PRODUKCJA", "PRODUCTION" -> "🐧"
-    "QA"                              -> "🟡"
-    "DEV", "DEVELOPMENT"              -> "🟦"
-    else                              -> "🖥️"
-}

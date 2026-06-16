@@ -269,48 +269,4 @@ fun TunnelInputField(
     }
 }
 
-@Composable
-fun DiagramNode(icon: String, label: String, color: Color) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(
-            contentAlignment = Alignment.Center,
-            modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .background(color.copy(alpha = 0.15f))
-                .border(1.dp, color.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
-        ) {
-            Text(text = icon, fontSize = 20.sp)
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = label,
-            color = TextSecondary,
-            fontSize = 9.sp,
-            fontFamily = FontFamily.Monospace,
-            fontWeight = FontWeight.Bold
-        )
-    }
-}
-
-@Composable
-fun DiagramLine(text: String, color: Color, modifier: Modifier = Modifier) {
-    Box(contentAlignment = Alignment.Center, modifier = modifier.padding(horizontal = 8.dp)) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(2.dp)
-                .background(Brush.horizontalGradient(listOf(color.copy(alpha = 0.5f), color)))
-        )
-        Text(
-            text = text,
-            color = color,
-            fontSize = 9.sp,
-            fontFamily = FontFamily.Monospace,
-            modifier = Modifier
-                .background(Surface2)
-                .padding(horizontal = 4.dp, vertical = 2.dp)
-                .offset(y = (-8).dp)
-        )
-    }
-}
+// (Usunięto martwe DiagramNode/DiagramLine — schemat tunelu rysowany jest teraz jako obraz wektorowy)
