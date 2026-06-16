@@ -33,6 +33,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.example.easyssh.R
 import com.example.easyssh.ui.components.*
 import com.example.easyssh.ui.theme.*
@@ -155,6 +157,8 @@ private fun FeaturedVideoCard() {
     val videoResId = remember {
         context.resources.getIdentifier("ed25519_tutorial", "raw", context.packageName)
     }
+    var showPlayer by remember { mutableStateOf(false) }
+
     SshCard {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Box(
@@ -183,8 +187,65 @@ private fun FeaturedVideoCard() {
             }
         }
         Spacer(Modifier.height(10.dp))
-        if (videoResId != 0) {
-            // Odtwarzacz realnego wideo z res/raw (z kontrolkami)
+
+        // Poster 16:9 z dużym przyciskiem ▶ — dotknięcie otwiera pełny ekran
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .clip(RoundedCornerShape(10.dp))
+                .background(Brush.linearGradient(listOf(TerminalBg, Surface2)))
+                .border(1.dp, BorderClr, RoundedCornerShape(10.dp))
+                .then(if (videoResId != 0) Modifier.clickable { showPlayer = true } else Modifier),
+        ) {
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = Modifier
+                    .size(76.dp)
+                    .clip(CircleShape)
+                    .background(Brush.radialGradient(listOf(AccentBlue.copy(alpha = 0.35f), Color.Transparent))),
+            ) {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(54.dp)
+                        .clip(CircleShape)
+                        .background(if (videoResId != 0) AccentBlue else TextTertiary),
+                ) {
+                    Text("▶", color = BgDeep, fontSize = 22.sp)
+                }
+            }
+            MonoLabel(
+                if (videoResId != 0) "⏱ Instruktaż wideo · dotknij, aby odtworzyć" else "Wideo wkrótce",
+                TextSecondary,
+                10,
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 12.dp, bottom = 10.dp),
+            )
+        }
+
+        if (showPlayer && videoResId != 0) {
+            FullscreenVideoDialog(videoResId = videoResId, onDismiss = { showPlayer = false })
+        }
+    }
+}
+
+// ── Pełnoekranowy odtwarzacz wideo ────────────────────────────
+
+@Composable
+private fun FullscreenVideoDialog(videoResId: Int, onDismiss: () -> Unit) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black),
+        ) {
             AndroidView(
                 factory = { ctx ->
                     VideoView(ctx).apply {
@@ -192,48 +253,25 @@ private fun FeaturedVideoCard() {
                         val controller = MediaController(ctx)
                         controller.setAnchorView(this)
                         setMediaController(controller)
-                        setOnPreparedListener { seekTo(1) }
+                        setOnPreparedListener { start() } // autoplay po otwarciu pełnego ekranu
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(180.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(TerminalBg)
-                    .border(1.dp, BorderClr, RoundedCornerShape(10.dp)),
+                    .aspectRatio(16f / 9f),
             )
-        } else {
-            // Podgląd-zaślepka dopóki nie dodano pliku wideo
+            // Przycisk zamknięcia
             Box(
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(150.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .background(TerminalBg)
-                    .border(1.dp, BorderClr, RoundedCornerShape(10.dp)),
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .size(40.dp)
+                    .clip(CircleShape)
+                    .background(Color.Black.copy(alpha = 0.5f))
+                    .clickable { onDismiss() },
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(56.dp)
-                        .clip(CircleShape)
-                        .background(
-                            Brush.radialGradient(
-                                listOf(AccentBlue.copy(alpha = 0.30f), Color.Transparent)
-                            )
-                        ),
-                ) {
-                    Text("▶", color = AccentBlue, fontSize = 24.sp)
-                }
-                MonoLabel(
-                    "Ed25519 Key Generation Tutorial",
-                    TextTertiary,
-                    10,
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(start = 10.dp, bottom = 8.dp),
-                )
+                Text("✕", color = Color.White, fontSize = 20.sp)
             }
         }
     }
