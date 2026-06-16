@@ -40,12 +40,11 @@ class MainActivity : ComponentActivity() {
 fun EasySshApp() {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = navBackStackEntry?.destination?.route
+    val currentRoutePattern = navBackStackEntry?.destination?.route
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    // Removed "Terminal (Lokalny)" from the list
     val allDrawerScreens = listOf(
         "Home (Dashboard)" to Screen.Dashboard.route,
         "Serwery" to Screen.Servers.route,
@@ -74,20 +73,27 @@ fun EasySshApp() {
                 Spacer(Modifier.height(8.dp))
 
                 allDrawerScreens.forEach { (label, route) ->
-                    val isSelected = currentRoute == route ||
-                            (route.startsWith("terminal") && currentRoute?.startsWith("terminal") == true)
+                    val isSelected = when {
+                        currentRoutePattern == route -> true
+                        route == Screen.Servers.route && currentRoutePattern?.startsWith("terminal") == true -> true
+                        else -> false
+                    }
 
                     NavigationDrawerItem(
                         label = { Text(text = label, fontFamily = FontFamily.Monospace) },
                         selected = isSelected,
                         onClick = {
                             scope.launch { drawerState.close() }
-                            navController.navigate(route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+                            
+                            if (currentRoutePattern != route) {
+                                navController.navigate(route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    // FIX: Home should always go to Dashboard, not the last detail screen.
+                                    restoreState = (route != Screen.Dashboard.route)
                                 }
-                                launchSingleTop = true
-                                restoreState = true
                             }
                         },
                         colors = NavigationDrawerItemDefaults.colors(
@@ -106,16 +112,17 @@ fun EasySshApp() {
         Scaffold(
             containerColor = BgDeep,
             bottomBar = {
-                if (currentRoute in bottomNavRoutes) {
+                if (currentRoutePattern in bottomNavRoutes) {
                     EasySshBottomNav(
-                        currentRoute = currentRoute,
+                        currentRoute = currentRoutePattern,
                         onItemClick  = { screen ->
                             navController.navigate(screen.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
                                 launchSingleTop = true
-                                restoreState    = true
+                                // FIX: Ensure Home button always takes you back to clean Dashboard
+                                restoreState = (screen.route != Screen.Dashboard.route)
                             }
                         }
                     )
@@ -139,7 +146,9 @@ fun EasySshApp() {
                 }
 
                 composable(Screen.Servers.route) {
-                    ServersScreen(onNavigateToTerminal = { id -> navController.navigate(Screen.Terminal.createRoute(id)) })
+                    ServersScreen(onNavigateToTerminal = { id -> 
+                        navController.navigate(Screen.Terminal.createRoute(id)) 
+                    })
                 }
 
                 composable(Screen.Keys.route) { KeysScreen() }

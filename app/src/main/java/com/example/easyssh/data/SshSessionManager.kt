@@ -6,7 +6,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import java.io.InputStream
 import java.io.OutputStream
@@ -23,6 +22,7 @@ class SshSessionManager {
         val terminalBuffer: StringBuilder = StringBuilder()
     )
 
+    // gets session by server id or return null if no session found
     fun getSession(serverId: Int): ActiveSession? = sessions[serverId]
 
     fun addSession(serverId: Int, session: Session, channel: ChannelShell, outputStream: OutputStream): ActiveSession {
@@ -49,7 +49,7 @@ class SshSessionManager {
                 while (inputStream.read(buffer).also { i = it } != -1) {
                     val text = String(buffer, 0, i)
                     activeSession.terminalBuffer.append(text)
-                    // Keep buffer size reasonable (last 50k chars)
+                    // Keep buffer size reasonable (e.g., last 50k chars)
                     if (activeSession.terminalBuffer.length > 50000) {
                         activeSession.terminalBuffer.delete(0, 10000)
                     }
