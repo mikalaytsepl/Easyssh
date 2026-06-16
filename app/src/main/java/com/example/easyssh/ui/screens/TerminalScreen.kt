@@ -74,9 +74,10 @@ fun TerminalScreen(
         if (connectionState is ConnectionState.Error) SoundFx.playError()
     }
 
-    // Pobieramy klucze i filtrujemy tylko te przypisane do tego konkretnego serwera
+    // Klucze dostępne dla tego serwera: przypisane do niego ORAZ ogólne (nieprzypisane, np. zaimportowane)
     val allKeys by keysViewModel.keys.collectAsState()
-    val serverKeys = allKeys.filter { it.serverId == server.id }
+    val serverKeys = allKeys.filter { it.serverId == server.id || it.serverId == null }
+    // Klucz domyślny serwera = back-referencja Server.keyId (relacja dwukierunkowa)
     val linkedKeyName = allKeys.find { it.id == server.keyId }?.name
 
     val snippets by snippetViewModel.snippets.collectAsState()
@@ -140,12 +141,15 @@ fun TerminalScreen(
                                     onClick = { selectedAuthMethod = "KEY_${key.id}" },
                                     colors = RadioButtonDefaults.colors(selectedColor = AccentGreen, unselectedColor = TextSecondary)
                                 )
-                                Text("🔑 ${key.name}", color = AccentBlue, fontFamily = FontFamily.Monospace, fontSize = 13.sp)
+                                Text(
+                                    "🔑 ${key.name}" + if (key.serverId == null) " · ogólny" else "",
+                                    color = AccentBlue, fontFamily = FontFamily.Monospace, fontSize = 13.sp,
+                                )
                             }
                         }
                     } else {
                         Spacer(Modifier.height(8.dp))
-                        Text("Brak przypisanych kluczy SSH.", color = TextTertiary, fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(start = 12.dp))
+                        Text("Brak dostępnych kluczy SSH.", color = TextTertiary, fontSize = 11.sp, fontFamily = FontFamily.Monospace, modifier = Modifier.padding(start = 12.dp))
                     }
                 }
             },

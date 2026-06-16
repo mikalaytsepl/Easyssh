@@ -23,4 +23,11 @@ interface ServerDao {
 
     @Delete
     suspend fun deleteServer(server: Server)
+
+    // Relacja dwukierunkowa: domyślny klucz serwera (Server.keyId)
+    @Query("UPDATE servers SET keyId = :keyId WHERE id = :serverId")
+    suspend fun setDefaultKey(serverId: Int, keyId: Int?)
+
+    @Query("UPDATE servers SET keyId = NULL WHERE keyId = :keyId")
+    suspend fun clearDefaultKeyEverywhere(keyId: Int)
 }
