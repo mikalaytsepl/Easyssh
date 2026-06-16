@@ -6,6 +6,7 @@ import com.example.easyssh.data.AppDatabase
 import com.example.easyssh.data.Server
 import com.example.easyssh.data.Snippet
 import com.example.easyssh.ssh.SshSessionManager
+import com.example.easyssh.util.SoundFx
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -28,6 +29,7 @@ class EasySshApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        SoundFx.init(this) // załaduj efekty dźwiękowe z res/raw (SoundPool)
         seedIfEmpty()
     }
 
