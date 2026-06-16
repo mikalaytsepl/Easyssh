@@ -195,11 +195,12 @@ fun KeysScreen(
                             val (realPriv, realPub) = withContext(Dispatchers.IO) {
                                 val jsch = JSch()
 
-                                // Bezpieczne algorytmy, które JSch potrafi generować
-                                val jschKeyType = if (type == "ECDSA 256") KeyPair.ECDSA else KeyPair.RSA
-                                val keySize = if (type == "RSA 4096") 4096 else 256
-
-                                val keyPair = KeyPair.genKeyPair(jsch, jschKeyType, keySize)
+                                // Generowanie pary kluczy wg wybranego algorytmu
+                                val keyPair = when (type) {
+                                    "Ed25519"   -> KeyPair.genKeyPair(jsch, KeyPair.ED25519, 256)
+                                    "ECDSA 256" -> KeyPair.genKeyPair(jsch, KeyPair.ECDSA, 256)
+                                    else        -> KeyPair.genKeyPair(jsch, KeyPair.RSA, 4096)
+                                }
 
                                 val privOut = ByteArrayOutputStream()
                                 val pubOut = ByteArrayOutputStream()
@@ -538,7 +539,7 @@ fun GenerateKeyDialog(
     onGenerate: (String, String, Int?) -> Unit
 ) {
     var keyName by remember { mutableStateOf("") }
-    var selectedType by remember { mutableStateOf("RSA 4096") }
+    var selectedType by remember { mutableStateOf("Ed25519") }
 
     var selectedServerId by remember { mutableStateOf<Int?>(null) }
     var serverExpanded by remember { mutableStateOf(false) }
@@ -605,20 +606,24 @@ fun GenerateKeyDialog(
 
                 Spacer(modifier = Modifier.height(12.dp))
                 Text("Typ algorytmu:", color = TextSecondary, fontSize = 12.sp)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(
-                        selected = selectedType == "RSA 4096",
-                        onClick = { if (!isGenerating) selectedType = "RSA 4096" },
-                        colors = RadioButtonDefaults.colors(selectedColor = AccentGreen)
-                    )
-                    Text("RSA 4096", color = if(isGenerating) TextSecondary else TextPrimary, fontSize = 14.sp)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    RadioButton(
-                        selected = selectedType == "ECDSA 256",
-                        onClick = { if (!isGenerating) selectedType = "ECDSA 256" },
-                        colors = RadioButtonDefaults.colors(selectedColor = AccentGreen)
-                    )
-                    Text("ECDSA 256", color = if(isGenerating) TextSecondary else TextPrimary, fontSize = 14.sp)
+                listOf("Ed25519", "RSA 4096", "ECDSA 256").forEach { kt ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable(enabled = !isGenerating) { selectedType = kt }
+                    ) {
+                        RadioButton(
+                            selected = selectedType == kt,
+                            onClick = { if (!isGenerating) selectedType = kt },
+                            colors = RadioButtonDefaults.colors(selectedColor = AccentGreen)
+                        )
+                        Text(kt, color = if (isGenerating) TextSecondary else TextPrimary, fontSize = 14.sp)
+                        if (kt == "Ed25519") {
+                            Spacer(Modifier.width(8.dp))
+                            Text("zalecane", color = AccentGreen, fontSize = 10.sp, fontFamily = FontFamily.Monospace)
+                        }
+                    }
                 }
             }
         },

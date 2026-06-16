@@ -36,7 +36,8 @@ fun DashboardScreen(
     snippetsViewModel: SnippetViewModel = viewModel(),
 ) {
     val servers by serverViewModel.servers.collectAsState()
-    val recentServers = servers.take(5)
+    // "Ostatnio używane" — sortowanie po znaczniku ostatniego połączenia
+    val recentServers = servers.sortedByDescending { it.lastConnectedAt }.take(5)
 
     val keys by keysViewModel.keys.collectAsState()
     val snippets by snippetsViewModel.snippets.collectAsState()

@@ -24,6 +24,7 @@ class TerminalViewModel(application: Application) : AndroidViewModel(application
     fun connect(server: Server, password: String? = null, selectedKeyId: Int? = null) {
         viewModelScope.launch(Dispatchers.IO) {
             val sshKey = selectedKeyId?.let { db.sshKeyDao().getKeyById(it) }
+            db.serverDao().setLastConnected(server.id, System.currentTimeMillis()) // sekcja "Ostatnio używane"
             sessionFor(server.id).connect(server, password = password, sshKey = sshKey)
         }
     }
