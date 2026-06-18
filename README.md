@@ -82,6 +82,123 @@ Ekrany szczegółowe / narzędzia (dostępne z zakładek lub menu):
 - **Tunel** — kreator tuneli SSH.
 - **Akademia** — baza wiedzy.
 
+## Pełny Opis Funkcji (Specyfikacja Funkcjonalna)
+
+Pełna lista funkcji aplikacji w podziale na ekrany/moduły. Każda pozycja odpowiada realnemu
+zachowaniu w kodzie (podano pliki źródłowe).
+
+### Dashboard — `ui/screens/DashboardScreen.kt`
+
+- **Statystyki bazy** — trzy karty liczników: *Serwery*, *Klucze SSH*, *Snippety*, każda z paskiem
+  postępu (wypełnienie = liczba / 20). Liczby aktualizują się na żywo z bazy.
+- **Ostatnio używane** — do 5 serwerów posortowanych malejąco po `lastConnectedAt`; kliknięcie
+  przenosi do ekranu terminala danego serwera.
+- **Skróty do narzędzi** — kafelki *Diagnostyka*, *Tunel SSH*, *Akademia*.
+- **Status systemu** — stan bazy danych, wersja aplikacji, liczba zapisanych serwerów.
+
+### Serwery / Książka Adresowa — `ui/screens/ServersScreen.kt`
+
+- **Lista serwerów** wczytywana na żywo z bazy (`Flow` → `StateFlow`), **grupowana po środowisku**
+  (Produkcja / QA / Dev / inne) z licznikami w nagłówkach grup.
+- **Wyszukiwarka** — filtruje po nazwie, adresie IP oraz nazwie użytkownika (bez rozróżniania wielkości liter).
+- **Filtry środowisk** — chipy: Wszystkie / Produkcja / QA / Dev.
+- **Karta serwera** — ikona dystrybucji, nazwa, badge środowiska, adres i port, użytkownik; znacznik
+  **`● SSH`** gdy serwer ma aktywną sesję (z `SshSessionManager.activeSessions`).
+- **Akcje** — kliknięcie karty → terminal; **edycja** (ołówek) → arkusz `AddServerSheet`;
+  **usuwanie** (kosz) z dialogiem potwierdzenia.
+- **Dodawanie** — przycisk **FAB „+"** otwiera arkusz nowego serwera.
+- **Stany puste** — osobne komunikaty dla „brak serwerów" i „brak wyników".
+
+### Dodawanie / Edycja serwera — `ui/screens/AddServerScreen.kt` (`AddServerSheet`)
+
+- Modalny arkusz dolny z polami: **NAZWA**, **ADRES IP**, **PORT** (tylko cyfry, maks. 5 znaków,
+  domyślnie 22), **UŻYTKOWNIK**.
+- **Środowisko** — lista rozwijana (PROD / QA / DEV).
+- **Dystrybucja** — lista rozwijana z ikonami (ubuntu / debian / centos / fedora / rocky / linux),
+  steruje ikoną serwera na listach.
+- **Walidacja** — przycisk zapisu aktywny tylko gdy nazwa, IP i użytkownik są niepuste.
+- Zapis przez callback do `ServerViewModel.addServer`; przy edycji zachowuje `keyId` i `lastConnectedAt`.
+
+### Klucze / Menedżer kluczy SSH — `ui/screens/KeysScreen.kt`
+
+- **Lista kluczy** (na żywo z bazy) z badge typu algorytmu.
+- **Generowanie klucza** (dialog) — nazwa, **typ: Ed25519 / RSA 4096 / ECDSA 256**, opcjonalne
+  przypisanie do serwera, opcjonalne **passphrase**. Ed25519 generuje Bouncy Castle, RSA/ECDSA — JSch.
+  Passphrase nakłada warstwę `KeyVault` (PBKDF2 + AES-GCM); klucz prywatny jest dodatkowo szyfrowany
+  at-rest (`CryptoManager`) przed zapisem.
+- **Import klucza z pliku** — wybór pliku (`GetContent`), odczyt treści, walidacja `PRIVATE KEY`,
+  **rozpoznanie typu po nagłówku PEM** (OpenSSH / RSA / ECDSA / DSA / Imported), próba wyprowadzenia
+  klucza publicznego.
+- **Przypisanie klucza do serwera** — lista rozwijana na karcie klucza (`assignKeyToServer`),
+  utrzymuje relację dwukierunkową `Server ↔ SshKey`.
+- **Instalacja klucza publicznego na serwerze** (odpowiednik `ssh-copy-id`) — dialog wyboru serwera
+  i hasła; `KeyInstaller` dopisuje klucz do `~/.ssh/authorized_keys` i ustawia uprawnienia.
+- **Kopiowanie klucza publicznego** do schowka (z dźwiękiem potwierdzenia i komunikatem).
+- **Usuwanie klucza** — czyści powiązania (back-referencje) w serwerach.
+- **FAB** otwiera dialog generowania.
+
+### Snippety / Biblioteka Skryptów — `ui/screens/SnippetsScreen.kt`
+
+- **Lista snippetów** (na żywo z bazy), **grupowana po kategorii** z licznikami.
+- **Wyszukiwarka** — po tytule i treści komendy.
+- **Filtr kategorii** — chipy generowane dynamicznie z istniejących kategorii + „Wszystkie".
+- **Karta snippetu** — tytuł, badge kategorii, podgląd komendy w stylu terminala.
+- **Kopiowanie komendy** do schowka (ikona 📋, dźwięk sukcesu, komunikat).
+- **Dodawanie / Edycja** (dialog) — tytuł, kategoria, komenda; walidacja (tytuł i komenda niepuste).
+- **Usuwanie** snippetu; **FAB** otwiera dialog dodawania.
+
+### Terminal SSH / Szczegóły serwera — `ui/screens/TerminalScreen.kt`
+
+- **Karta szczegółów** — IP, użytkownik, port, badge środowiska oraz domyślny klucz serwera; etykieta
+  statusu połączenia (OFFLINE / CONNECTING / ONLINE / ERROR).
+- **Połącz / Rozłącz** — przycisk zmieniający stan wizualnie zależnie od `ConnectionState`.
+- **Dialog uwierzytelniania** — wybór metody: **hasło** albo **klucz** (z listy kluczy przypisanych do
+  serwera oraz ogólnych); dla klucza opcjonalne pole **passphrase**.
+- **Realne połączenie SSH** (JSch, kanał `shell`) z terminalem renderowanym przez **xterm.js w WebView**;
+  most JS↔Kotlin (wejście → `sendData`, wyjście → `writeToTerminal`).
+- **Odtworzenie historii** (`scrollback`) po powrocie na ekran — sesja przeżywa nawigację.
+- **Szybkie komendy** — chipy (`top`, `df -h`, `netstat -tulpn`, `systemctl status`) wysyłane do sesji.
+- **Wysyłanie snippetów do sesji** — arkusz z listą zapisanych snippetów, kliknięcie wysyła komendę.
+- **Audio** — sygnał błędu przy nieudanym połączeniu (`ConnectionState.Error`).
+
+### Diagnostyka — `ui/screens/DiagnosticsScreen.kt`
+
+- **Pole hosta docelowego** (domyślnie `8.8.8.8`) i **wybór narzędzia** (PING / skaner portów).
+- **Ping** — ICMP (`/system/bin/ping -c 4`) ze strumieniowaniem wyniku; **automatyczny fallback na TCP**
+  (porty 80/443/22/53), gdy ICMP jest zablokowany, z czytelnym wnioskiem.
+- **Skaner portów** — **równoległe** (`async`/`awaitAll`) sprawdzanie zestawu portów
+  (FTP, SSH, TELNET, SMTP, DNS, HTTP, HTTPS, MySQL, RDP, HTTP-ALT, WINBOX) z oznaczeniem otwarty/zamknięty.
+- **Animacja** — pulsujący radar (`Canvas`) podczas pracy narzędzia.
+
+### Kreator tuneli SSH — `ui/screens/TunnelScreen.kt`
+
+- **Przełącznik trybu** — `ssh -L` (lokalny) / `ssh -R` (zdalny), z dopasowaniem etykiet i wartości pól.
+- **Schemat graficzny** tunelu (obraz wektorowy) zależny od trybu.
+- **Formularz** — port lokalny/bind, serwer SSH, użytkownik, host docelowy, port docelowy.
+- **Dynamiczne generowanie komendy** `ssh -L/-R port:host:port user@serwer -N -f`.
+- **Kopiowanie komendy** do schowka (z dźwiękiem i komunikatem).
+
+### Akademia SSH — `ui/screens/AcademyScreen.kt`
+
+- **Materiał wideo** „Generowanie klucza Ed25519" — poster 16:9, **odtwarzanie pełnoekranowe**
+  (`VideoView` + `MediaController`, autoodtwarzanie), zamknięcie krzyżykiem.
+- **Poradniki** — rozwijane karty z animacją (`animateContentSize`): *RSA vs Ed25519*,
+  *Tunelowanie Portów*, *Hardening SSH* — tekst, bloki kodu i tagi tematyczne.
+- **Schematy** — interaktywny schemat kryptografii asymetrycznej (rysowany w Compose) oraz sześć
+  wektorowych schematów (handshake SSH, uwierzytelnianie kluczem, tunel dynamiczny, przekierowanie
+  portu, szyfrowanie ruchu).
+
+### Funkcje przekrojowe
+
+- **Trwałość** — wszystkie listy płyną z Room (`Flow` → `StateFlow`); przy pierwszym uruchomieniu
+  baza jest zasilana danymi przykładowymi (`EasySshApplication.seedIfEmpty`).
+- **Trwałe sesje SSH** — żyją w `SshSessionManager` na poziomie aplikacji, przeżywają nawigację;
+  wiele równoległych sesji (jedna na serwer).
+- **Bezpieczeństwo** — szyfrowanie kluczy prywatnych at-rest (Android Keystore) + opcjonalny passphrase;
+  hasła do serwerów nie są przechowywane.
+- **Multimedia** — obrazy (ikony, schematy), wideo (Akademia), audio (sukces/błąd), animacje
+  (radar, rozwijanie kart).
+
 ## Widok Bazy Danych
 
 Trwałość danych zapewnia biblioteka Room. Baza (`AppDatabase`) składa się z trzech encji, a dostęp do
